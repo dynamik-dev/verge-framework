@@ -40,6 +40,8 @@ class Container implements ContainerInterface
         if (!$this->has(Events\EventDispatcher::class)) {
             $this->singleton(Events\EventDispatcher::class, fn($c) => new Events\EventDispatcher($c));
         }
+        // Note: CacheInterface and LoggerInterface are now wired via App::driver()
+        // These fallbacks exist only for backwards compatibility when container is used standalone
         if (!$this->has(Cache\CacheInterface::class)) {
             $this->singleton(Cache\CacheInterface::class, fn() => new Cache\Drivers\MemoryCacheDriver());
         }

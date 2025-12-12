@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Verge;
 
 use Closure;
+use Verge\Cache;
+use Verge\Log;
 use Verge\Concerns\HasMiddleware;
 use Verge\Events\EventDispatcher;
 use Verge\Http\Request;
@@ -29,6 +31,12 @@ class App
     protected ?RouteGroup $currentGroup = null;
     protected bool $booted = false;
 
+    /** @var array<string, array<string, \Closure>> */
+    protected array $drivers = [];
+
+    /** @var array<string, string> Default driver names per service */
+    protected array $defaultDrivers = [];
+
     public function __construct(?ContainerInterface $container = null)
     {
         if ($container === null) {
@@ -40,6 +48,36 @@ class App
             // External PSR-11 container - use as-is
             $this->container = $container;
         }
+
+        // Make App resolvable from container
+        $this->container->instance(App::class, $this);
+        $this->container->instance(static::class, $this);
+
+        $this->registerDefaultDrivers();
+    }
+
+    /**
+     * Register framework default drivers.
+     */
+    protected function registerDefaultDrivers(): void
+    {
+        // Cache drivers
+        $this->driver('cache', 'memory', fn() => new Cache\Drivers\MemoryCacheDriver());
+        $this->defaultDriver('cache', 'memory');
+
+        // Wire CacheInterface to use driver system
+        $this->singleton(Cache\CacheInterface::class, fn() => $this->driver('cache'));
+
+        // Log drivers
+        $this->driver('log', 'stream', fn() => new Log\Drivers\StreamLogDriver(
+            $this->env('LOG_PATH', 'php://stderr'),
+            Log\LogLevel::from($this->env('LOG_LEVEL', 'debug'))
+        ));
+        $this->driver('log', 'array', fn() => new Log\Drivers\ArrayLogDriver());
+        $this->defaultDriver('log', 'stream');
+
+        // Wire LoggerInterface to use driver system
+        $this->singleton(Log\LoggerInterface::class, fn() => $this->driver('log'));
     }
 
     protected function router(): RouterInterface
@@ -221,6 +259,63 @@ class App
     public function container(): ContainerInterface
     {
         return $this->container;
+    }
+
+    /**
+     * Register or resolve a driver.
+     *
+     * When called with 3 args: registers a driver factory
+     * When called with 1 arg: resolves the current driver based on ENV
+     *
+     * @param string $service The service name (e.g., 'cache', 'log', 'queue')
+     * @param string|null $name The driver name (e.g., 'redis', 'file')
+     * @param \Closure|null $factory Factory that creates the driver instance
+     * @return static|mixed Returns $this when registering, driver instance when resolving
+     */
+    public function driver(string $service, ?string $name = null, ?\Closure $factory = null): mixed
+    {
+        // Resolving: driver('cache') -> reads CACHE_DRIVER env, returns instance
+        if ($name === null && $factory === null) {
+            $envKey = strtoupper($service) . '_DRIVER';
+            $driverName = $this->env($envKey) ?? ($this->defaultDrivers[$service] ?? null);
+
+            if ($driverName === null) {
+                throw new \RuntimeException(
+                    "No driver configured for '{$service}'. Set the {$envKey} environment variable."
+                );
+            }
+
+            if (!isset($this->drivers[$service][$driverName])) {
+                throw new \RuntimeException(
+                    "Unknown {$service} driver '{$driverName}'. Available drivers: " .
+                    implode(', ', array_keys($this->drivers[$service] ?? []))
+                );
+            }
+
+            return $this->drivers[$service][$driverName]($this);
+        }
+
+        // Registering: driver('cache', 'redis', fn() => new RedisCache())
+        if ($name !== null && $factory !== null) {
+            $this->drivers[$service][$name] = $factory;
+            return $this;
+        }
+
+        throw new \InvalidArgumentException(
+            'driver() requires either 1 argument (to resolve) or 3 arguments (to register)'
+        );
+    }
+
+    /**
+     * Set the default driver for a service.
+     *
+     * @param string $service The service name (e.g., 'cache', 'log')
+     * @param string $name The default driver name
+     */
+    public function defaultDriver(string $service, string $name): static
+    {
+        $this->defaultDrivers[$service] = $name;
+        return $this;
     }
 
     /**

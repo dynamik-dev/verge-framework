@@ -1,0 +1,8 @@
+# Exclude files from distribution archives
+/tests export-ignore
+/docs export-ignore
+/scripts export-ignore
+/.gitignore export-ignore
+/phpunit.xml export-ignore
+/composer.lock export-ignore
+/README.md export-ignore

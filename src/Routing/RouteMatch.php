@@ -1,0 +1,24 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Verge\Routing;
+
+class RouteMatch
+{
+    public function __construct(
+        public readonly bool $matched,
+        public readonly ?Route $route = null,
+        public readonly array $params = []
+    ) {}
+
+    public static function notFound(): self
+    {
+        return new self(false);
+    }
+
+    public static function found(Route $route, array $params = []): self
+    {
+        return new self(true, $route, $params);
+    }
+}

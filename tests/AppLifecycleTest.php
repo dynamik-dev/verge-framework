@@ -1,0 +1,154 @@
+<?php
+
+declare(strict_types=1);
+
+use Verge\App;
+
+describe('App Lifecycle', function () {
+
+    describe('app.ready event', function () {
+        it('emits app.ready before handling first request', function () {
+            $app = new App();
+            $readyFired = false;
+
+            $app->on('app.ready', function () use (&$readyFired) {
+                $readyFired = true;
+            });
+
+            $app->get('/', fn() => 'ok');
+
+            expect($readyFired)->toBeFalse();
+
+            $app->test()->get('/');
+
+            expect($readyFired)->toBeTrue();
+        });
+
+        it('only emits app.ready once', function () {
+            $app = new App();
+            $count = 0;
+
+            $app->on('app.ready', function () use (&$count) {
+                $count++;
+            });
+
+            $app->get('/', fn() => 'ok');
+            $app->test()->get('/');
+            $app->test()->get('/');
+            $app->test()->get('/');
+
+            expect($count)->toBe(1);
+        });
+
+        it('allows providers to register routes on app.ready', function () {
+            $app = new App();
+
+            $app->configure(function ($app) {
+                $app->on('app.ready', function () use ($app) {
+                    $app->get('/deferred', fn() => 'deferred route');
+                });
+            });
+
+            expect($app->test()->get('/deferred')->body())->toBe('deferred route');
+        });
+
+        it('allows providers to use services registered by other providers', function () {
+            $app = new App();
+
+            // First provider registers a service
+            $app->configure(function ($app) {
+                $app->singleton('greeting', fn() => 'Hello from service');
+            });
+
+            // Second provider uses that service on app.ready
+            $app->configure(function ($app) {
+                $app->on('app.ready', function () use ($app) {
+                    $greeting = $app->make('greeting');
+                    $app->get('/greeting', fn() => $greeting);
+                });
+            });
+
+            expect($app->test()->get('/greeting')->body())->toBe('Hello from service');
+        });
+    });
+
+    describe('isBooted()', function () {
+        it('returns false before any request', function () {
+            $app = new App();
+
+            expect($app->isBooted())->toBeFalse();
+        });
+
+        it('returns true after first request', function () {
+            $app = new App();
+            $app->get('/', fn() => 'ok');
+
+            $app->test()->get('/');
+
+            expect($app->isBooted())->toBeTrue();
+        });
+    });
+
+    describe('configure() with app.ready pattern', function () {
+        it('supports class-based providers', function () {
+            $app = new App();
+            $app->configure(TestLifecycleProvider::class);
+
+            expect($app->test()->get('/provider-route')->body())->toBe('from provider');
+        });
+
+        it('supports callable providers', function () {
+            $app = new App();
+
+            $app->configure(function ($app) {
+                $app->singleton('config.value', fn() => 42);
+                $app->on('app.ready', function () use ($app) {
+                    $app->get('/config', fn() => (string) $app->make('config.value'));
+                });
+            });
+
+            expect($app->test()->get('/config')->body())->toBe('42');
+        });
+
+        it('maintains order of immediate bindings', function () {
+            $app = new App();
+            $order = [];
+
+            $app->configure(function ($app) use (&$order) {
+                $order[] = 'provider1:bind';
+                $app->on('app.ready', function () use (&$order) {
+                    $order[] = 'provider1:ready';
+                });
+            });
+
+            $app->configure(function ($app) use (&$order) {
+                $order[] = 'provider2:bind';
+                $app->on('app.ready', function () use (&$order) {
+                    $order[] = 'provider2:ready';
+                });
+            });
+
+            $app->get('/', fn() => 'ok');
+            $app->test()->get('/');
+
+            expect($order)->toBe([
+                'provider1:bind',
+                'provider2:bind',
+                'provider1:ready',
+                'provider2:ready',
+            ]);
+        });
+    });
+
+});
+
+// Test provider class
+class TestLifecycleProvider
+{
+    public function __invoke(App $app): void
+    {
+        $app->on('app.ready', function () use ($app) {
+            $app->get('/provider-route', fn() => 'from provider');
+        });
+    }
+}

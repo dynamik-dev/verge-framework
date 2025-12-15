@@ -7,7 +7,7 @@ namespace Tests\Routing;
 use Verge\App;
 use Verge\Http\Request;
 use Verge\Http\Response;
-use Verge\Routing\Attribute\Route;
+use Verge\Routing\Attributes\Route;
 
 class AttributeController
 {

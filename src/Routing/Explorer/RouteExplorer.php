@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Verge\Routing;
+namespace Verge\Routing\Explorer;
 
 use Closure;
+use Verge\Routing\PathParser;
+use Verge\Routing\Route;
+use Verge\Routing\RouteMatcherInterface;
 
-class Routes
+class RouteExplorer
 {
     /** @var RouteInfo[] */
     protected array $routes = [];

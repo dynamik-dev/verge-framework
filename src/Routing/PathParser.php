@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Verge\Routing;
 
+use Verge\Routing\Explorer\ParamInfo;
+
 /**
  * Utility for parsing route path parameters.
  * Handles nested braces in constraints like {year:\d{4}}.

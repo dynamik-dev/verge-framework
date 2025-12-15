@@ -142,7 +142,7 @@ describe('CachedRouter', function () {
             $router = new CachedRouter($cacheData);
 
             expect(fn () => $router->url('unknown'))
-                ->toThrow(\Verge\Routing\RouteNotFoundException::class);
+                ->toThrow(\Verge\Routing\Exceptions\RouteNotFoundException::class);
         });
 
         it('appends extra params as query string', function () {

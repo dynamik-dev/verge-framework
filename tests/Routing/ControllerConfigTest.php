@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Verge\Routing\Attribute\Route;
+use Verge\Routing\Attributes\Route;
 use Verge\Routing\RouteLoader;
 use Verge\Routing\Router;
 

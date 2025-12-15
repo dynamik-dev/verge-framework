@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use Psr\Http\Client\ClientInterface;
 use Verge\App;
+use Verge\Http\Client\Client;
 use Verge\Http\Response;
 use Verge\Verge;
 use Verge\Routing\RouterInterface;
 
+use function Verge\http;
 use function Verge\json;
 use function Verge\make;
 use function Verge\redirect;
@@ -223,6 +226,66 @@ describe('Helper Functions', function () {
             $response = redirect('/search?q=test&page=1');
 
             expect($response->getHeader('location'))->toBe(['/search?q=test&page=1']);
+        });
+    });
+
+    describe('http()', function () {
+        beforeEach(fn () => Verge::reset());
+
+        it('returns a Client instance', function () {
+            Verge::create();
+
+            $client = http();
+
+            expect($client)->toBeInstanceOf(Client::class);
+        });
+
+        it('returns new instance each call by default', function () {
+            Verge::create();
+
+            $first = http();
+            $second = http();
+
+            expect($first)->not->toBe($second);
+        });
+
+        it('returns singleton when bound as singleton', function () {
+            $app = Verge::create();
+            $app->singleton(Client::class, fn () => new Client());
+
+            $first = http();
+            $second = http();
+
+            expect($first)->toBe($second);
+        });
+
+        it('returns configured client when bound', function () {
+            $app = Verge::create();
+            $app->singleton(Client::class, fn () => (new Client())->withBaseUri('https://api.example.com'));
+
+            $client = http();
+
+            expect($client)->toBeInstanceOf(Client::class);
+        });
+
+        it('resolves PSR-18 ClientInterface to Client', function () {
+            $app = Verge::create();
+
+            $client = $app->make(ClientInterface::class);
+
+            expect($client)->toBeInstanceOf(Client::class);
+        });
+
+        it('swapping Client binding affects ClientInterface resolution', function () {
+            $app = Verge::create();
+            $configured = (new Client())->withTimeout(99);
+            $app->singleton(Client::class, fn () => $configured);
+
+            $viaInterface = $app->make(ClientInterface::class);
+            $viaConcrete = $app->make(Client::class);
+
+            expect($viaInterface)->toBe($configured);
+            expect($viaConcrete)->toBe($configured);
         });
     });
 

@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Verge\App;
-use Verge\Routing\RouteInfo;
-use Verge\Routing\Routes;
+use Verge\Routing\Explorer\RouteExplorer;
+use Verge\Routing\Explorer\RouteInfo;
 
 // Test controller for handler extraction
 class TestRoutesController
@@ -38,7 +38,7 @@ class TestRoutesMiddleware
     }
 }
 
-describe('Routes', function () {
+describe('RouteExplorer', function () {
 
     describe('all()', function () {
         it('extracts all routes', function () {
@@ -331,11 +331,11 @@ describe('RouteInfo', function () {
 
 describe('App::routes() integration', function () {
 
-    it('returns Routes instance when called with no arguments', function () {
+    it('returns RouteExplorer instance when called with no arguments', function () {
         $app = new App();
         $app->get('/test', fn () => 'test');
 
-        expect($app->routes())->toBeInstanceOf(Routes::class);
+        expect($app->routes())->toBeInstanceOf(RouteExplorer::class);
     });
 
     it('works with route groups', function () {

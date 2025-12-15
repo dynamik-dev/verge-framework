@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Verge\Routing\Attribute;
+namespace Verge\Routing\Attributes;
 
 use Attribute;
 

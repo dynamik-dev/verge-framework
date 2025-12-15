@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Verge\Routing;
 
 use Psr\Http\Message\RequestInterface;
+use Verge\Routing\Exceptions\RouteNotFoundException;
 
 class Router implements RouterInterface, RouteMatcherInterface
 {

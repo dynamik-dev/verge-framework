@@ -18,7 +18,7 @@ use Verge\Routing\Router;
 use Verge\Routing\RouterInterface;
 use Verge\Routing\RouteMatcherInterface;
 use Verge\Routing\RouteGroup;
-use Verge\Routing\Routes;
+use Verge\Routing\Explorer\RouteExplorer;
 use Verge\Testing\TestClient;
 use Psr\Container\ContainerInterface;
 
@@ -389,12 +389,12 @@ class App
      * Get route introspection or set a router.
      *
      * @param RouteMatcherInterface|null $router
-     * @return ($router is null ? Routes : static)
+     * @return ($router is null ? RouteExplorer : static)
      */
-    public function routes(?RouteMatcherInterface $router = null): Routes|static
+    public function routes(?RouteMatcherInterface $router = null): RouteExplorer|static
     {
         if ($router === null) {
-            return new Routes($this->router());
+            return new RouteExplorer($this->router());
         }
 
         // Merge routes from provided router (used by BootstrapCache)

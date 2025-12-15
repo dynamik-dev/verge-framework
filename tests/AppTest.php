@@ -11,7 +11,7 @@ use Verge\Http\Response;
 use Verge\Routing\Route;
 use Verge\Routing\Router;
 use Verge\Routing\RouterInterface;
-use Verge\Routing\Routes;
+use Verge\Routing\Explorer\RouteExplorer;
 use Verge\Testing\TestClient;
 
 // Test fixtures
@@ -306,13 +306,13 @@ describe('App', function () {
         });
 
         describe('routes()', function () {
-            it('returns Routes for introspection', function () {
+            it('returns RouteExplorer for introspection', function () {
                 $app = new App();
                 $app->get('/test', fn () => 'ok');
 
                 $routes = $app->routes();
 
-                expect($routes)->toBeInstanceOf(Routes::class);
+                expect($routes)->toBeInstanceOf(RouteExplorer::class);
                 expect($routes->count())->toBe(1);
             });
 

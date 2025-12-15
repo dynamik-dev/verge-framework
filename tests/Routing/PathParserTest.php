@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Verge\Routing\ParamInfo;
+use Verge\Routing\Explorer\ParamInfo;
 use Verge\Routing\PathParser;
 
 describe('PathParser', function () {

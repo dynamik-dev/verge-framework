@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Verge;
 
+use Psr\Http\Client\ClientInterface;
+use Verge\Cache\Cache;
+
 class Verge
 {
     protected static ?App $app = null;
@@ -67,5 +70,25 @@ class Verge
         }
 
         return static::$app->url($name, $params);
+    }
+
+    public static function http(): ClientInterface
+    {
+        if (static::$app === null) {
+            throw new \RuntimeException('No application instance. Call Verge::create() first.');
+        }
+
+        /** @var ClientInterface */
+        return static::$app->make(ClientInterface::class);
+    }
+
+    public static function cache(): Cache
+    {
+        if (static::$app === null) {
+            throw new \RuntimeException('No application instance. Call Verge::create() first.');
+        }
+
+        /** @var Cache */
+        return static::$app->make(Cache::class);
     }
 }

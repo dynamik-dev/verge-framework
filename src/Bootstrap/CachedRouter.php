@@ -8,7 +8,7 @@ use Psr\Http\Message\RequestInterface;
 use Verge\Routing\Route;
 use Verge\Routing\RouteMatch;
 use Verge\Routing\RouteMatcherInterface;
-use Verge\Routing\RouteNotFoundException;
+use Verge\Routing\Exceptions\RouteNotFoundException;
 
 /**
  * A read-only router that loads pre-cached route data for optimized matching.

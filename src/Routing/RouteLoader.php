@@ -6,7 +6,7 @@ namespace Verge\Routing;
 
 use ReflectionClass;
 use ReflectionMethod;
-use Verge\Routing\Attribute\Route as RouteAttribute;
+use Verge\Routing\Attributes\Route as RouteAttribute;
 
 class RouteLoader
 {

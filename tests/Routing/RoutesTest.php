@@ -43,9 +43,9 @@ describe('Routes', function () {
     describe('all()', function () {
         it('extracts all routes', function () {
             $app = new App();
-            $app->get('/users', fn() => 'list');
-            $app->post('/users', fn() => 'create');
-            $app->get('/posts', fn() => 'posts');
+            $app->get('/users', fn () => 'list');
+            $app->post('/users', fn () => 'create');
+            $app->get('/posts', fn () => 'posts');
 
             $routes = $app->routes()->all();
 
@@ -63,10 +63,10 @@ describe('Routes', function () {
     describe('method()', function () {
         it('filters routes by HTTP method', function () {
             $app = new App();
-            $app->get('/a', fn() => 'a');
-            $app->get('/b', fn() => 'b');
-            $app->post('/c', fn() => 'c');
-            $app->put('/d', fn() => 'd');
+            $app->get('/a', fn () => 'a');
+            $app->get('/b', fn () => 'b');
+            $app->post('/c', fn () => 'c');
+            $app->put('/d', fn () => 'd');
 
             expect($app->routes()->method('GET'))->toHaveCount(2);
             expect($app->routes()->method('POST'))->toHaveCount(1);
@@ -76,7 +76,7 @@ describe('Routes', function () {
 
         it('is case insensitive', function () {
             $app = new App();
-            $app->get('/test', fn() => 'test');
+            $app->get('/test', fn () => 'test');
 
             expect($app->routes()->method('get'))->toHaveCount(1);
             expect($app->routes()->method('Get'))->toHaveCount(1);
@@ -86,9 +86,9 @@ describe('Routes', function () {
     describe('named()', function () {
         it('filters only named routes', function () {
             $app = new App();
-            $app->get('/a', fn() => 'a', name: 'route.a');
-            $app->get('/b', fn() => 'b');
-            $app->get('/c', fn() => 'c', name: 'route.c');
+            $app->get('/a', fn () => 'a', name: 'route.a');
+            $app->get('/b', fn () => 'b');
+            $app->get('/c', fn () => 'c', name: 'route.c');
 
             $named = $app->routes()->named();
 
@@ -99,8 +99,8 @@ describe('Routes', function () {
 
         it('returns empty array when no named routes', function () {
             $app = new App();
-            $app->get('/a', fn() => 'a');
-            $app->get('/b', fn() => 'b');
+            $app->get('/a', fn () => 'a');
+            $app->get('/b', fn () => 'b');
 
             expect($app->routes()->named())->toBe([]);
         });
@@ -109,9 +109,9 @@ describe('Routes', function () {
     describe('prefix()', function () {
         it('filters routes by path prefix', function () {
             $app = new App();
-            $app->get('/api/users', fn() => 'users');
-            $app->get('/api/posts', fn() => 'posts');
-            $app->get('/web/home', fn() => 'home');
+            $app->get('/api/users', fn () => 'users');
+            $app->get('/api/posts', fn () => 'posts');
+            $app->get('/web/home', fn () => 'home');
 
             $apiRoutes = $app->routes()->prefix('/api');
 
@@ -124,9 +124,9 @@ describe('Routes', function () {
     describe('count()', function () {
         it('returns route count', function () {
             $app = new App();
-            $app->get('/a', fn() => 'a');
-            $app->get('/b', fn() => 'b');
-            $app->post('/c', fn() => 'c');
+            $app->get('/a', fn () => 'a');
+            $app->get('/b', fn () => 'b');
+            $app->post('/c', fn () => 'c');
 
             expect($app->routes()->count())->toBe(3);
         });
@@ -135,7 +135,7 @@ describe('Routes', function () {
     describe('toArray()', function () {
         it('serializes routes to array format', function () {
             $app = new App();
-            $app->get('/users/{id}', fn($id) => $id, name: 'users.show');
+            $app->get('/users/{id}', fn ($id) => $id, name: 'users.show');
 
             $arr = $app->routes()->toArray();
 
@@ -150,7 +150,7 @@ describe('Routes', function () {
 
         it('is JSON serializable', function () {
             $app = new App();
-            $app->get('/test', fn() => 'test');
+            $app->get('/test', fn () => 'test');
 
             $json = json_encode($app->routes()->toArray());
 
@@ -166,7 +166,7 @@ describe('RouteInfo', function () {
     describe('parameter extraction', function () {
         it('extracts required parameters', function () {
             $app = new App();
-            $app->get('/users/{id}', fn($id) => $id);
+            $app->get('/users/{id}', fn ($id) => $id);
 
             $route = $app->routes()->all()[0];
 
@@ -178,7 +178,7 @@ describe('RouteInfo', function () {
 
         it('extracts optional parameters', function () {
             $app = new App();
-            $app->get('/archive/{year?}', fn($year = null) => $year);
+            $app->get('/archive/{year?}', fn ($year = null) => $year);
 
             $route = $app->routes()->all()[0];
 
@@ -188,7 +188,7 @@ describe('RouteInfo', function () {
 
         it('extracts parameter constraints', function () {
             $app = new App();
-            $app->get('/users/{id:\d+}', fn($id) => $id);
+            $app->get('/users/{id:\d+}', fn ($id) => $id);
 
             $route = $app->routes()->all()[0];
 
@@ -197,7 +197,7 @@ describe('RouteInfo', function () {
 
         it('extracts constraints with nested braces', function () {
             $app = new App();
-            $app->get('/archive/{year:\d{4}}', fn($year) => $year);
+            $app->get('/archive/{year:\d{4}}', fn ($year) => $year);
 
             $route = $app->routes()->all()[0];
 
@@ -207,7 +207,7 @@ describe('RouteInfo', function () {
 
         it('extracts optional parameters with constraints', function () {
             $app = new App();
-            $app->get('/archive/{year?:\d{4}}', fn($year = null) => $year);
+            $app->get('/archive/{year?:\d{4}}', fn ($year = null) => $year);
 
             $route = $app->routes()->all()[0];
 
@@ -218,7 +218,7 @@ describe('RouteInfo', function () {
 
         it('extracts multiple parameters', function () {
             $app = new App();
-            $app->get('/posts/{postId}/comments/{commentId}', fn($postId, $commentId) => '');
+            $app->get('/posts/{postId}/comments/{commentId}', fn ($postId, $commentId) => '');
 
             $route = $app->routes()->all()[0];
 
@@ -231,7 +231,7 @@ describe('RouteInfo', function () {
     describe('handler extraction', function () {
         it('identifies closure handlers', function () {
             $app = new App();
-            $app->get('/test', fn() => 'test');
+            $app->get('/test', fn () => 'test');
 
             $route = $app->routes()->all()[0];
 
@@ -271,7 +271,7 @@ describe('RouteInfo', function () {
     describe('middleware extraction', function () {
         it('extracts middleware class names', function () {
             $app = new App();
-            $app->get('/test', fn() => 'test', middleware: [TestRoutesMiddleware::class]);
+            $app->get('/test', fn () => 'test', middleware: [TestRoutesMiddleware::class]);
 
             $route = $app->routes()->all()[0];
 
@@ -280,7 +280,7 @@ describe('RouteInfo', function () {
 
         it('extracts multiple middleware', function () {
             $app = new App();
-            $app->get('/test', fn() => 'test', middleware: [
+            $app->get('/test', fn () => 'test', middleware: [
                 TestRoutesMiddleware::class,
                 TestRoutesMiddleware::class,
             ]);
@@ -292,8 +292,8 @@ describe('RouteInfo', function () {
 
         it('handles callable middleware', function () {
             $app = new App();
-            $app->get('/test', fn() => 'test', middleware: [
-                fn($req, $next) => $next($req),
+            $app->get('/test', fn () => 'test', middleware: [
+                fn ($req, $next) => $next($req),
             ]);
 
             $route = $app->routes()->all()[0];
@@ -333,7 +333,7 @@ describe('App::routes() integration', function () {
 
     it('returns Routes instance when called with no arguments', function () {
         $app = new App();
-        $app->get('/test', fn() => 'test');
+        $app->get('/test', fn () => 'test');
 
         expect($app->routes())->toBeInstanceOf(Routes::class);
     });
@@ -341,7 +341,7 @@ describe('App::routes() integration', function () {
     it('still configures routes when passed callable', function () {
         $app = new App();
         $app->routes(function ($router) {
-            $router->get('/configured', fn() => 'configured');
+            $router->get('/configured', fn () => 'configured');
         });
 
         expect($app->routes()->count())->toBe(1);
@@ -351,8 +351,8 @@ describe('App::routes() integration', function () {
     it('works with route groups', function () {
         $app = new App();
         $app->group('/api', function ($app) {
-            $app->get('/users', fn() => 'users');
-            $app->get('/posts', fn() => 'posts');
+            $app->get('/users', fn () => 'users');
+            $app->get('/posts', fn () => 'posts');
         });
 
         $routes = $app->routes()->all();
@@ -365,7 +365,7 @@ describe('App::routes() integration', function () {
     it('captures named routes in groups', function () {
         $app = new App();
         $app->group('/api', function ($app) {
-            $app->get('/users', fn() => 'users', name: 'api.users');
+            $app->get('/users', fn () => 'users', name: 'api.users');
         });
 
         $named = $app->routes()->named();

@@ -36,7 +36,7 @@ class Routes
         $method = strtoupper($method);
         return array_values(array_filter(
             $this->routes,
-            fn(RouteInfo $r) => $r->method === $method
+            fn (RouteInfo $r) => $r->method === $method
         ));
     }
 
@@ -49,7 +49,7 @@ class Routes
     {
         return array_values(array_filter(
             $this->routes,
-            fn(RouteInfo $r) => $r->name !== null
+            fn (RouteInfo $r) => $r->name !== null
         ));
     }
 
@@ -62,7 +62,7 @@ class Routes
     {
         return array_values(array_filter(
             $this->routes,
-            fn(RouteInfo $r) => str_starts_with($r->path, $prefix)
+            fn (RouteInfo $r) => str_starts_with($r->path, $prefix)
         ));
     }
 
@@ -81,7 +81,7 @@ class Routes
      */
     public function toArray(): array
     {
-        return array_map(fn(RouteInfo $r) => $r->toArray(), $this->routes);
+        return array_map(fn (RouteInfo $r) => $r->toArray(), $this->routes);
     }
 
     /**
@@ -211,7 +211,7 @@ class Routes
             $class = $handler[0];
             /** @var string $method */
             $method = $handler[1];
-            
+
             return [
                 'type' => 'controller',
                 'class' => $class,

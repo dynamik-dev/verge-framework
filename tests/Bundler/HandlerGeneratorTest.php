@@ -76,7 +76,7 @@ describe('HandlerGenerator', function () {
 
     describe('generate()', function () {
         it('generates valid PHP class for simple closure', function () {
-            $closure = fn() => 'hello';
+            $closure = fn () => 'hello';
             $info = $this->extractor->extract($closure);
 
             $content = $this->generator->generate('GetIndexHandler', $info);
@@ -88,7 +88,7 @@ describe('HandlerGenerator', function () {
         });
 
         it('generates class with parameters', function () {
-            $closure = fn($id) => ['id' => $id];
+            $closure = fn ($id) => ['id' => $id];
             $info = $this->extractor->extract($closure);
 
             $content = $this->generator->generate('GetUsersIdHandler', $info);
@@ -97,7 +97,7 @@ describe('HandlerGenerator', function () {
         });
 
         it('generates class with typed parameters', function () {
-            $closure = fn(string $name) => $name;
+            $closure = fn (string $name) => $name;
             $info = $this->extractor->extract($closure);
 
             $content = $this->generator->generate('GetUsersHandler', $info);
@@ -106,7 +106,7 @@ describe('HandlerGenerator', function () {
         });
 
         it('generates class with return type', function () {
-            $closure = fn(): array => [];
+            $closure = fn (): array => [];
             $info = $this->extractor->extract($closure);
 
             $content = $this->generator->generate('GetUsersHandler', $info);
@@ -115,7 +115,7 @@ describe('HandlerGenerator', function () {
         });
 
         it('generates use statements for class types', function () {
-            $closure = fn(\stdClass $obj) => $obj;
+            $closure = fn (\stdClass $obj) => $obj;
             $info = $this->extractor->extract($closure);
 
             $content = $this->generator->generate('GetHandler', $info);
@@ -125,7 +125,7 @@ describe('HandlerGenerator', function () {
 
         it('generates constructor for closures with use clause', function () {
             $value = 42;
-            $closure = fn() => $value;
+            $closure = fn () => $value;
             $info = $this->extractor->extract($closure);
 
             $content = $this->generator->generate('GetHandler', $info);
@@ -138,7 +138,7 @@ describe('HandlerGenerator', function () {
 
     describe('write()', function () {
         it('creates handler file', function () {
-            $closure = fn() => 'test';
+            $closure = fn () => 'test';
             $info = $this->extractor->extract($closure);
 
             $content = $this->generator->generate('TestHandler', $info);
@@ -152,7 +152,7 @@ describe('HandlerGenerator', function () {
             $newPath = $this->outputPath . '/nested/handlers';
             $this->generator->setOutputPath($newPath);
 
-            $closure = fn() => 'test';
+            $closure = fn () => 'test';
             $info = $this->extractor->extract($closure);
 
             $content = $this->generator->generate('TestHandler', $info);

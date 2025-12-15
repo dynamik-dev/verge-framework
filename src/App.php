@@ -63,25 +63,25 @@ class App
     protected function registerDefaultDrivers(): void
     {
         // Cache drivers
-        $this->driver('cache', 'memory', fn() => new Cache\Drivers\MemoryCacheDriver());
+        $this->driver('cache', 'memory', fn () => new Cache\Drivers\MemoryCacheDriver());
         $this->defaultDriver('cache', 'memory');
 
         // Wire CacheInterface to use driver system
-        $this->singleton(Cache\CacheInterface::class, fn() => $this->driver('cache'));
+        $this->singleton(Cache\CacheInterface::class, fn () => $this->driver('cache'));
 
         // Log drivers
         $logPath = $this->env('LOG_PATH', 'php://stderr');
         $logLevel = $this->env('LOG_LEVEL', 'debug');
 
-        $this->driver('log', 'stream', fn() => new Log\Drivers\StreamLogDriver(
+        $this->driver('log', 'stream', fn () => new Log\Drivers\StreamLogDriver(
             is_scalar($logPath) ? (string)$logPath : 'php://stderr',
             Log\LogLevel::from(is_scalar($logLevel) ? (string)$logLevel : 'debug')
         ));
-        $this->driver('log', 'array', fn() => new Log\Drivers\ArrayLogDriver());
+        $this->driver('log', 'array', fn () => new Log\Drivers\ArrayLogDriver());
         $this->defaultDriver('log', 'stream');
 
         // Wire LoggerInterface to use driver system
-        $this->singleton(Log\LoggerInterface::class, fn() => $this->driver('log'));
+        $this->singleton(Log\LoggerInterface::class, fn () => $this->driver('log'));
     }
 
     protected function router(): RouterInterface
@@ -91,7 +91,7 @@ class App
         }
         $router = $this->container->resolve(RouterInterface::class);
         if (!$router instanceof RouterInterface) {
-             throw new \RuntimeException('Resolved service is not a RouterInterface');
+            throw new \RuntimeException('Resolved service is not a RouterInterface');
         }
         return $this->router = $router;
     }
@@ -103,7 +103,7 @@ class App
         }
         $env = $this->container->resolve(Env::class);
         if (!$env instanceof Env) {
-             throw new \RuntimeException('Resolved service is not an Env');
+            throw new \RuntimeException('Resolved service is not an Env');
         }
         return $this->env = $env;
     }
@@ -111,11 +111,11 @@ class App
     protected function events(): EventDispatcher
     {
         if ($this->events !== null) {
-             return $this->events;
+            return $this->events;
         }
         $events = $this->container->resolve(EventDispatcher::class);
         if (!$events instanceof EventDispatcher) {
-             throw new \RuntimeException('Resolved service is not an EventDispatcher');
+            throw new \RuntimeException('Resolved service is not an EventDispatcher');
         }
         return $this->events = $events;
     }
@@ -335,7 +335,7 @@ class App
         if ($name === null && $factory === null) {
             $envKey = strtoupper($service) . '_DRIVER';
             $driverName = $this->env($envKey) ?? ($this->defaultDrivers[$service] ?? null);
-            
+
             $driverName = is_scalar($driverName) ? (string) $driverName : null;
 
             if ($driverName === null) {
@@ -411,7 +411,7 @@ class App
         }
 
         if (!is_callable($provider)) {
-             throw new \RuntimeException('Provider must be callable');
+            throw new \RuntimeException('Provider must be callable');
         }
         $provider($this);
         return $this;
@@ -484,13 +484,13 @@ class App
         $routes = $subApp->router()->getRoutes();
         foreach ($routes as $method => $methodRoutes) {
             foreach ($methodRoutes as $route) {
-                
+
                 $handler = $route->handler;
                 if (!is_array($handler) && !is_string($handler) && !is_callable($handler)) {
                     // Should theoretically not happen if Route is consistent
-                   throw new \RuntimeException('Invalid handler type in sub-app route');
+                    throw new \RuntimeException('Invalid handler type in sub-app route');
                 }
-                
+
                 $newPath = $prefix . $route->path;
                 /** @var array<mixed>|callable|string $handler */
                 $newRoute = $this->router()->add($method, $newPath, $handler);
@@ -544,11 +544,11 @@ class App
             }
 
             $route = $match->route;
-            // $match->route is guaranteed not null if matched is true based on Router logic, 
+            // $match->route is guaranteed not null if matched is true based on Router logic,
             // but PHPStan doesn't track that dependency unless we assert.
             if ($route === null) {
-                 // Should be unreachable given !$match->matched check above
-                 throw new \RuntimeException('Route matched but route object is null');
+                // Should be unreachable given !$match->matched check above
+                throw new \RuntimeException('Route matched but route object is null');
             }
             $params = $match->params;
 
@@ -556,22 +556,22 @@ class App
             $middlewareStack = $route->getMiddleware();
 
             // Create the final handler - always returns a Response
-            $handler = fn(Request $req) => $this->prepareResponse(
+            $handler = fn (Request $req) => $this->prepareResponse(
                 $this->executeHandler($route->handler, $match->params, $req)
             );
 
             // Wrap handler with middleware
             $pipeline = array_reduce(
                 array_reverse($middlewareStack),
-                fn($next, $middleware) => fn(Request $req) => $this->executeMiddleware($middleware, $req, $next),
+                fn ($next, $middleware) => fn (Request $req) => $this->executeMiddleware($middleware, $req, $next),
                 $handler
             );
 
             $result = $pipeline($request);
             if (!$result instanceof Response) {
-                 // Should have been prepared by prepareResponse
-                 $content = is_scalar($result) || $result instanceof \Stringable ? (string) $result : '';
-                 return new Response($content, 200);
+                // Should have been prepared by prepareResponse
+                $content = is_scalar($result) || $result instanceof \Stringable ? (string) $result : '';
+                return new Response($content, 200);
             }
             return $result;
         } finally {
@@ -592,18 +592,18 @@ class App
         // [Controller::class, 'method']
         if (is_array($handler)) {
             [$class, $method] = $handler;
-             if (!is_string($class) || !is_string($method)) {
-                 throw new \RuntimeException('Invalid array handler: expected [class, method]');
-             }
-             $classStr = $class;
-             $instance = $this->container->resolve($classStr);
-             $methodStr = $method; // is_string check passed
-             
-             $callback = [$instance, $methodStr];
-             if (!is_callable($callback)) {
-                  throw new \RuntimeException("Method {$methodStr} not callable on resolved instance");
-             }
-             return $this->container->call($callback, $params);
+            if (!is_string($class) || !is_string($method)) {
+                throw new \RuntimeException('Invalid array handler: expected [class, method]');
+            }
+            $classStr = $class;
+            $instance = $this->container->resolve($classStr);
+            $methodStr = $method; // is_string check passed
+
+            $callback = [$instance, $methodStr];
+            if (!is_callable($callback)) {
+                throw new \RuntimeException("Method {$methodStr} not callable on resolved instance");
+            }
+            return $this->container->call($callback, $params);
         }
 
         // Invokable class string
@@ -626,7 +626,7 @@ class App
         }
 
         if (!is_callable($middleware)) {
-             throw new \RuntimeException('Middleware must be callable');
+            throw new \RuntimeException('Middleware must be callable');
         }
 
         return $middleware($request, $next);

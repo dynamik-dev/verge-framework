@@ -13,7 +13,8 @@ class EventDispatcher
 
     public function __construct(
         protected Container $container
-    ) {}
+    ) {
+    }
 
     /**
      * Register an event listener.

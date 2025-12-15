@@ -32,7 +32,8 @@ class ClosureInfo
         public readonly bool $isArrowFunction = false,
         public readonly bool $isStatic = false,
         public readonly bool $bindThis = false,
-    ) {}
+    ) {
+    }
 
     /**
      * Check if this closure can be converted to a handler class.

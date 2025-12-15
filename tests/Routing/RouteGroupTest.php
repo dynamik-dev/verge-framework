@@ -20,7 +20,7 @@ describe('RouteGroup', function () {
     describe('addRoute()', function () {
         it('adds a route to the group', function () {
             $group = new RouteGroup('/api');
-            $route = new Route('GET', '/api/users', fn() => 'users', '#^/api/users$#');
+            $route = new Route('GET', '/api/users', fn () => 'users', '#^/api/users$#');
 
             $group->addRoute($route);
 
@@ -29,8 +29,8 @@ describe('RouteGroup', function () {
 
         it('adds multiple routes', function () {
             $group = new RouteGroup('/api');
-            $route1 = new Route('GET', '/api/users', fn() => 'users', '#^/api/users$#');
-            $route2 = new Route('POST', '/api/users', fn() => 'create', '#^/api/users$#');
+            $route1 = new Route('GET', '/api/users', fn () => 'users', '#^/api/users$#');
+            $route2 = new Route('POST', '/api/users', fn () => 'create', '#^/api/users$#');
 
             $group->addRoute($route1);
             $group->addRoute($route2);
@@ -42,7 +42,7 @@ describe('RouteGroup', function () {
     describe('use()', function () {
         it('adds middleware to the group', function () {
             $group = new RouteGroup('/api');
-            $middleware = fn($req, $next) => $next($req);
+            $middleware = fn ($req, $next) => $next($req);
 
             $result = $group->use($middleware);
 
@@ -52,7 +52,7 @@ describe('RouteGroup', function () {
 
         it('adds middleware to existing routes', function () {
             $group = new RouteGroup('/api');
-            $route = new Route('GET', '/api/users', fn() => 'users', '#^/api/users$#');
+            $route = new Route('GET', '/api/users', fn () => 'users', '#^/api/users$#');
             $middleware = 'AuthMiddleware';
 
             $group->addRoute($route);
@@ -63,8 +63,8 @@ describe('RouteGroup', function () {
 
         it('adds multiple middleware to all routes', function () {
             $group = new RouteGroup('/api');
-            $route1 = new Route('GET', '/api/users', fn() => 'users', '#^/api/users$#');
-            $route2 = new Route('GET', '/api/posts', fn() => 'posts', '#^/api/posts$#');
+            $route1 = new Route('GET', '/api/users', fn () => 'users', '#^/api/users$#');
+            $route2 = new Route('GET', '/api/posts', fn () => 'posts', '#^/api/posts$#');
 
             $group->addRoute($route1);
             $group->addRoute($route2);
@@ -93,8 +93,8 @@ describe('RouteGroup', function () {
 
         it('returns all added routes', function () {
             $group = new RouteGroup('/api');
-            $route1 = new Route('GET', '/api/a', fn() => 'a', '#^/api/a$#');
-            $route2 = new Route('GET', '/api/b', fn() => 'b', '#^/api/b$#');
+            $route1 = new Route('GET', '/api/a', fn () => 'a', '#^/api/a$#');
+            $route2 = new Route('GET', '/api/b', fn () => 'b', '#^/api/b$#');
 
             $group->addRoute($route1);
             $group->addRoute($route2);

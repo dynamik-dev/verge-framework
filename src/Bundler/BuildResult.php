@@ -28,7 +28,8 @@ class BuildResult
         public readonly array $warnings,
         public readonly string $outputPath,
         public readonly float $duration,
-    ) {}
+    ) {
+    }
 
     /**
      * Get a human-readable summary.

@@ -56,7 +56,7 @@ describe('Uri', function () {
         });
 
         it('throws on invalid URI', function () {
-            expect(fn() => new Uri('http:///invalid'))
+            expect(fn () => new Uri('http:///invalid'))
                 ->toThrow(InvalidArgumentException::class);
         });
     });

@@ -13,27 +13,27 @@ beforeEach(function () {
 // Helper functions to create unbound closures (outside class context)
 function createIndexClosure(): \Closure
 {
-    return fn() => 'index';
+    return fn () => 'index';
 }
 
 function createUsersClosure(): \Closure
 {
-    return fn() => ['users' => []];
+    return fn () => ['users' => []];
 }
 
 function createUserByIdClosure(): \Closure
 {
-    return fn($id) => ['id' => $id];
+    return fn ($id) => ['id' => $id];
 }
 
 function createPostClosure(): \Closure
 {
-    return fn() => 'create';
+    return fn () => 'create';
 }
 
 function createDoubleClosure(int $multiplier): \Closure
 {
-    return fn($n) => $n * $multiplier;
+    return fn ($n) => $n * $multiplier;
 }
 
 afterEach(function () {
@@ -82,7 +82,7 @@ describe('Bundler', function () {
         it('throws when called before configure', function () {
             $bundler = new Bundler(outputPath: $this->outputPath);
 
-            expect(fn() => $bundler->build())
+            expect(fn () => $bundler->build())
                 ->toThrow(\RuntimeException::class, 'must be configured');
         });
 
@@ -169,11 +169,11 @@ describe('Bundler', function () {
         });
 
         it('skips bound closures', function () {
-            $obj = new class {
+            $obj = new class () {
                 public function getApp(): App
                 {
                     $app = new App();
-                    $app->get('/', fn() => $this); // Bound closure
+                    $app->get('/', fn () => $this); // Bound closure
                     return $app;
                 }
             };
@@ -211,7 +211,7 @@ describe('Bundler', function () {
         it('throws when called before configure', function () {
             $bundler = new Bundler(outputPath: $this->outputPath);
 
-            expect(fn() => $bundler->analyze())
+            expect(fn () => $bundler->analyze())
                 ->toThrow(\RuntimeException::class, 'must be configured');
         });
 
@@ -262,11 +262,11 @@ describe('Bundler', function () {
         });
 
         it('reports skipped routes in summary', function () {
-            $obj = new class {
+            $obj = new class () {
                 public function getApp(): App
                 {
                     $app = new App();
-                    $app->get('/', fn() => $this);
+                    $app->get('/', fn () => $this);
                     return $app;
                 }
             };

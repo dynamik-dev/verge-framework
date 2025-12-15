@@ -12,7 +12,8 @@ class WarmResult
     public function __construct(
         public readonly RouteCacheResult $routes,
         public readonly ContainerCacheResult $container
-    ) {}
+    ) {
+    }
 
     /**
      * Get a summary of the warming operation.

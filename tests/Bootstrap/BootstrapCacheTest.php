@@ -78,7 +78,7 @@ describe('BootstrapCache', function () {
 
         it('warns about closure handlers', function () {
             $app = new App();
-            $app->get('/', fn() => 'Hello');
+            $app->get('/', fn () => 'Hello');
             $app->get('/users', ['TestUserController', 'index']);
 
             $cache = new BootstrapCache(path: $this->cacheDir);
@@ -94,7 +94,7 @@ describe('BootstrapCache', function () {
         it('throws when called before configure()', function () {
             $cache = new BootstrapCache(path: $this->cacheDir);
 
-            expect(fn() => $cache->warm())
+            expect(fn () => $cache->warm())
                 ->toThrow(\RuntimeException::class, 'must be configured');
         });
     });

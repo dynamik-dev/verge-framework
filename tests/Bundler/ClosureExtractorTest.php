@@ -12,7 +12,7 @@ beforeEach(function () {
 describe('ClosureExtractor', function () {
     describe('extract()', function () {
         it('extracts simple arrow function', function () {
-            $closure = fn() => 'hello';
+            $closure = fn () => 'hello';
 
             $info = $this->extractor->extract($closure);
 
@@ -23,7 +23,7 @@ describe('ClosureExtractor', function () {
         });
 
         it('extracts arrow function with parameters', function () {
-            $closure = fn($id) => ['id' => $id];
+            $closure = fn ($id) => ['id' => $id];
 
             $info = $this->extractor->extract($closure);
 
@@ -33,7 +33,7 @@ describe('ClosureExtractor', function () {
         });
 
         it('extracts typed parameters', function () {
-            $closure = fn(string $name, int $age) => "{$name} is {$age}";
+            $closure = fn (string $name, int $age) => "{$name} is {$age}";
 
             $info = $this->extractor->extract($closure);
 
@@ -46,7 +46,7 @@ describe('ClosureExtractor', function () {
         });
 
         it('extracts class type-hinted parameters', function () {
-            $closure = fn(\stdClass $obj) => $obj;
+            $closure = fn (\stdClass $obj) => $obj;
 
             $info = $this->extractor->extract($closure);
 
@@ -55,7 +55,7 @@ describe('ClosureExtractor', function () {
         });
 
         it('extracts return type', function () {
-            $closure = fn(): string => 'hello';
+            $closure = fn (): string => 'hello';
 
             $info = $this->extractor->extract($closure);
 
@@ -76,7 +76,7 @@ describe('ClosureExtractor', function () {
 
         it('extracts closure with use clause', function () {
             $multiplier = 5;
-            $closure = fn($x) => $x * $multiplier;
+            $closure = fn ($x) => $x * $multiplier;
 
             $info = $this->extractor->extract($closure);
 
@@ -86,10 +86,10 @@ describe('ClosureExtractor', function () {
         });
 
         it('detects bound closures', function () {
-            $obj = new class {
+            $obj = new class () {
                 public function getClosure(): \Closure
                 {
-                    return fn() => $this;
+                    return fn () => $this;
                 }
             };
 
@@ -102,7 +102,7 @@ describe('ClosureExtractor', function () {
         });
 
         it('extracts source location', function () {
-            $closure = fn() => 'test';
+            $closure = fn () => 'test';
 
             $info = $this->extractor->extract($closure);
 
@@ -112,7 +112,7 @@ describe('ClosureExtractor', function () {
         });
 
         it('extracts optional parameters with defaults', function () {
-            $closure = fn($required, $optional = 'default') => $required . $optional;
+            $closure = fn ($required, $optional = 'default') => $required . $optional;
 
             $info = $this->extractor->extract($closure);
 
@@ -124,7 +124,7 @@ describe('ClosureExtractor', function () {
         });
 
         it('extracts nullable parameters', function () {
-            $closure = fn(?string $name) => $name ?? 'anonymous';
+            $closure = fn (?string $name) => $name ?? 'anonymous';
 
             $info = $this->extractor->extract($closure);
 
@@ -144,10 +144,10 @@ describe('ClosureExtractor', function () {
         });
 
         it('returns false for bound closures', function () {
-            $obj = new class {
+            $obj = new class () {
                 public function getClosure(): \Closure
                 {
-                    return fn() => $this;
+                    return fn () => $this;
                 }
             };
 
@@ -163,5 +163,5 @@ describe('ClosureExtractor', function () {
 // Helper function to create unbound closure (outside class context)
 function getUnboundClosure(): \Closure
 {
-    return fn($id) => ['id' => $id];
+    return fn ($id) => ['id' => $id];
 }

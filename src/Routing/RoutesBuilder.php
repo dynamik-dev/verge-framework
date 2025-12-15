@@ -11,7 +11,8 @@ class RoutesBuilder
 
     public function __construct(
         private RouterInterface $router
-    ) {}
+    ) {
+    }
 
     /**
      * @param callable|array<mixed>|string $handler

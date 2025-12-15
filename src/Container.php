@@ -32,21 +32,21 @@ class Container implements ContainerInterface
     public function defaults(): static
     {
         if (!$this->has(Routing\RouterInterface::class)) {
-            $this->singleton(Routing\RouterInterface::class, fn() => new Routing\Router());
+            $this->singleton(Routing\RouterInterface::class, fn () => new Routing\Router());
         }
         if (!$this->has(Env::class)) {
-            $this->singleton(Env::class, fn() => new Env());
+            $this->singleton(Env::class, fn () => new Env());
         }
         if (!$this->has(Events\EventDispatcher::class)) {
-            $this->singleton(Events\EventDispatcher::class, fn($c) => new Events\EventDispatcher($c));
+            $this->singleton(Events\EventDispatcher::class, fn ($c) => new Events\EventDispatcher($c));
         }
         // Note: CacheInterface and LoggerInterface are now wired via App::driver()
         // These fallbacks exist only for backwards compatibility when container is used standalone
         if (!$this->has(Cache\CacheInterface::class)) {
-            $this->singleton(Cache\CacheInterface::class, fn() => new Cache\Drivers\MemoryCacheDriver());
+            $this->singleton(Cache\CacheInterface::class, fn () => new Cache\Drivers\MemoryCacheDriver());
         }
         if (!$this->has(Log\LoggerInterface::class)) {
-            $this->singleton(Log\LoggerInterface::class, fn() => new Log\Drivers\StreamLogDriver());
+            $this->singleton(Log\LoggerInterface::class, fn () => new Log\Drivers\StreamLogDriver());
         }
         return $this;
     }
@@ -54,7 +54,7 @@ class Container implements ContainerInterface
     public function bind(string $abstract, Closure|string $concrete): static
     {
         if (is_string($concrete)) {
-            $concrete = fn() => $this->resolve($concrete);
+            $concrete = fn () => $this->resolve($concrete);
         }
 
         $this->bindings[$abstract] = $concrete;
@@ -262,11 +262,11 @@ class Container implements ContainerInterface
     public function call(callable $callback, array $parameters = []): mixed
     {
         if (is_array($callback)) {
-             /** @var object|string $class */
-             $class = $callback[0];
-             /** @var string $method */
-             $method = $callback[1];
-             $reflection = new ReflectionMethod($class, $method);
+            /** @var object|string $class */
+            $class = $callback[0];
+            /** @var string $method */
+            $method = $callback[1];
+            $reflection = new ReflectionMethod($class, $method);
         } elseif ($callback instanceof Closure) {
             $reflection = new ReflectionFunction($callback);
         } elseif (is_string($callback)) {

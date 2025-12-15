@@ -8,7 +8,8 @@ class Cache
 {
     public function __construct(
         protected CacheInterface $driver
-    ) {}
+    ) {
+    }
 
     /**
      * Get an item from the cache.

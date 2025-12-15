@@ -321,7 +321,7 @@ describe('App Logger Integration', function () {
     it('allows swapping log driver', function () {
         $app = new App();
         $arrayDriver = new ArrayLogDriver();
-        $app->container()->singleton(LoggerInterface::class, fn() => $arrayDriver);
+        $app->container()->singleton(LoggerInterface::class, fn () => $arrayDriver);
 
         $logger = $app->container()->resolve(Logger::class);
 
@@ -331,7 +331,7 @@ describe('App Logger Integration', function () {
     it('injects logger into handlers', function () {
         $app = new App();
         $arrayDriver = new ArrayLogDriver();
-        $app->container()->singleton(LoggerInterface::class, fn() => $arrayDriver);
+        $app->container()->singleton(LoggerInterface::class, fn () => $arrayDriver);
 
         $app->get('/test', function (Logger $logger) {
             $logger->info('Handler executed');
@@ -346,7 +346,7 @@ describe('App Logger Integration', function () {
     it('shares logger singleton across requests', function () {
         $app = new App();
         $arrayDriver = new ArrayLogDriver();
-        $app->container()->singleton(LoggerInterface::class, fn() => $arrayDriver);
+        $app->container()->singleton(LoggerInterface::class, fn () => $arrayDriver);
 
         $app->get('/log', function (Logger $logger) {
             $logger->info('Request handled');

@@ -41,7 +41,7 @@ class UploadedFile implements UploadedFileInterface
 
         $content = file_get_contents($this->tmpName);
         if ($content === false) {
-             throw new RuntimeException("Unable to read file: {$this->tmpName}");
+            throw new RuntimeException("Unable to read file: {$this->tmpName}");
         }
 
         return new StringStream($content);

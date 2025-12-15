@@ -15,7 +15,7 @@ use function Verge\response;
 describe('Helper Functions', function () {
 
     describe('app()', function () {
-        beforeEach(fn() => Verge::reset());
+        beforeEach(fn () => Verge::reset());
 
         it('returns an App instance', function () {
             $result = app();
@@ -49,7 +49,7 @@ describe('Helper Functions', function () {
     });
 
     describe('make()', function () {
-        beforeEach(fn() => Verge::reset());
+        beforeEach(fn () => Verge::reset());
 
         it('resolves from container', function () {
             Verge::buildDefaults();
@@ -60,7 +60,7 @@ describe('Helper Functions', function () {
         });
 
         it('throws when no app exists', function () {
-            expect(fn() => make(RouterInterface::class))
+            expect(fn () => make(RouterInterface::class))
                 ->toThrow(RuntimeException::class);
         });
     });

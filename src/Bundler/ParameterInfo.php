@@ -19,7 +19,8 @@ class ParameterInfo
         public readonly mixed $defaultValue = null,
         public readonly bool $hasDefaultValue = false,
         public readonly bool $isNullable = false,
-    ) {}
+    ) {
+    }
 
     /**
      * Generate the parameter declaration for use in generated code.

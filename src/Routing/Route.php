@@ -19,7 +19,8 @@ class Route
         public readonly string $pattern,
         /** @var string[] */
         public readonly array $paramNames = []
-    ) {}
+    ) {
+    }
 
     public function name(string $name): static
     {

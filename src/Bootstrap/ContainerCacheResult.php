@@ -16,7 +16,8 @@ class ContainerCacheResult
     public function __construct(
         public readonly int $cached,
         public readonly array $failed
-    ) {}
+    ) {
+    }
 
     /**
      * Check if any classes failed to cache.

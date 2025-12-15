@@ -18,7 +18,8 @@ class RouteInfo
         public readonly array $params,
         public readonly array $middleware,
         public readonly array $handler,
-    ) {}
+    ) {
+    }
 
     /**
      * @return array{

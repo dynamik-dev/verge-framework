@@ -15,7 +15,8 @@ class RouteGroup
 
     public function __construct(
         protected string $prefix
-    ) {}
+    ) {
+    }
 
     public function addRoute(Route $route): void
     {

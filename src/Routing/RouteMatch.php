@@ -13,7 +13,8 @@ class RouteMatch
         public readonly bool $matched,
         public readonly ?Route $route = null,
         public readonly array $params = []
-    ) {}
+    ) {
+    }
 
     public static function notFound(): self
     {

@@ -229,7 +229,7 @@ describe('Cache Wrapper', function () {
         it('computes and stores when missing', function () {
             $cache = new Cache(new MemoryCacheDriver());
 
-            $result = $cache->remember('key', 60, fn() => 'computed');
+            $result = $cache->remember('key', 60, fn () => 'computed');
 
             expect($result)->toBe('computed');
             expect($cache->get('key'))->toBe('computed');
@@ -240,7 +240,7 @@ describe('Cache Wrapper', function () {
         it('stores without TTL', function () {
             $cache = new Cache(new MemoryCacheDriver());
 
-            $result = $cache->rememberForever('key', fn() => 'value');
+            $result = $cache->rememberForever('key', fn () => 'value');
 
             expect($result)->toBe('value');
             expect($cache->get('key'))->toBe('value');
@@ -370,7 +370,7 @@ describe('App Cache Integration', function () {
     it('allows swapping cache driver', function () {
         $app = new App();
         $customDriver = new MemoryCacheDriver();
-        $app->container()->singleton(CacheInterface::class, fn() => $customDriver);
+        $app->container()->singleton(CacheInterface::class, fn () => $customDriver);
 
         $cache = $app->container()->resolve(Cache::class);
 
@@ -381,7 +381,7 @@ describe('App Cache Integration', function () {
         $app = new App();
 
         $app->get('/cached', function (Cache $cache) {
-            return $cache->remember('greeting', 60, fn() => 'Hello');
+            return $cache->remember('greeting', 60, fn () => 'Hello');
         });
 
         expect($app->test()->get('/cached')->body())->toBe('Hello');

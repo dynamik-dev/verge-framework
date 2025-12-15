@@ -18,7 +18,8 @@ class RouteCacheResult
         public readonly int $cached,
         public readonly array $skipped,
         public readonly array $handlers
-    ) {}
+    ) {
+    }
 
     /**
      * Check if any routes were skipped.

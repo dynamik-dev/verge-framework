@@ -27,9 +27,10 @@ describe('Verge', function () {
         });
 
         it('accepts a callback for container configuration', function () {
-            $app = Verge::build(fn($c) => $c
+            $app = Verge::build(
+                fn ($c) => $c
                 ->defaults()
-                ->bind('custom', fn() => 'value')
+                ->bind('custom', fn () => 'value')
             );
 
             expect($app->make('custom'))->toBe('value');
@@ -53,13 +54,13 @@ describe('Verge', function () {
 
     describe('make()', function () {
         it('resolves from the app container', function () {
-            Verge::buildDefaults()->bind('service', fn() => 'resolved');
+            Verge::buildDefaults()->bind('service', fn () => 'resolved');
 
             expect(Verge::make('service'))->toBe('resolved');
         });
 
         it('throws when no app exists', function () {
-            expect(fn() => Verge::make('anything'))
+            expect(fn () => Verge::make('anything'))
                 ->toThrow(RuntimeException::class, 'No application instance');
         });
     });
@@ -88,7 +89,7 @@ describe('Verge', function () {
         });
 
         it('throws when no app exists', function () {
-            expect(fn() => Verge::env('anything'))
+            expect(fn () => Verge::env('anything'))
                 ->toThrow(RuntimeException::class, 'No application instance');
         });
     });
@@ -120,17 +121,17 @@ describe('Verge', function () {
             Verge::buildDefaults();
 
             $builder = Verge::routes(function ($r) {
-                $r->get('/test', fn() => 'test');
+                $r->get('/test', fn () => 'test');
             });
 
             expect($builder)->toBeInstanceOf(\Verge\Routing\RoutesBuilder::class);
         });
 
-            it('adds routes to the app router', function () {
+        it('adds routes to the app router', function () {
             Verge::buildDefaults();
 
             Verge::routes(function ($r) {
-                $r->get('/hello', fn() => 'world');
+                $r->get('/hello', fn () => 'world');
             });
 
             $app = Verge::app();
@@ -144,8 +145,8 @@ describe('Verge', function () {
             Verge::buildDefaults();
 
             Verge::routes(function ($r) {
-                $r->get('/with-header', fn() => 'ok');
-            })->use(fn($req, $next) => $next($req)->header('X-Group', 'applied'));
+                $r->get('/with-header', fn () => 'ok');
+            })->use(fn ($req, $next) => $next($req)->header('X-Group', 'applied'));
 
             $app = Verge::app();
             assert($app instanceof App);
@@ -158,11 +159,11 @@ describe('Verge', function () {
             Verge::buildDefaults();
 
             Verge::routes(function ($r) {
-                $r->get('/one', fn() => 'one');
+                $r->get('/one', fn () => 'one');
             });
 
             Verge::routes(function ($r) {
-                $r->get('/two', fn() => 'two');
+                $r->get('/two', fn () => 'two');
             });
 
             $app = Verge::app();
@@ -173,7 +174,7 @@ describe('Verge', function () {
         });
 
         it('throws when no app exists', function () {
-            expect(fn() => Verge::routes(fn($r) => $r->get('/', fn() => 'test')))
+            expect(fn () => Verge::routes(fn ($r) => $r->get('/', fn () => 'test')))
                 ->toThrow(RuntimeException::class, 'No application instance');
         });
     });

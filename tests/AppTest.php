@@ -24,7 +24,9 @@ class TestService
 
 class TestController
 {
-    public function __construct(public TestService $service) {}
+    public function __construct(public TestService $service)
+    {
+    }
 
     public function index(): array
     {
@@ -73,14 +75,16 @@ class TestProvider
 {
     public function __invoke(App $app): void
     {
-        $app->bind('provided-value', fn() => 'from-provider');
-        $app->singleton(TestService::class, fn() => new TestService());
+        $app->bind('provided-value', fn () => 'from-provider');
+        $app->singleton(TestService::class, fn () => new TestService());
     }
 }
 
 class ProviderWithDependency
 {
-    public function __construct(public Env $env) {}
+    public function __construct(public Env $env)
+    {
+    }
 
     public function __invoke(App $app): void
     {
@@ -91,7 +95,9 @@ class ProviderWithDependency
 
 class ParameterizedMiddleware
 {
-    public function __construct(public int $limit) {}
+    public function __construct(public int $limit)
+    {
+    }
 
     public function __invoke(Request $request, callable $next): Response
     {
@@ -123,7 +129,7 @@ describe('App', function () {
 
         it('allows chaining bindings after construction', function () {
             $app = (new App())
-                ->singleton('db', fn() => 'database');
+                ->singleton('db', fn () => 'database');
 
             expect($app->make('db'))->toBe('database');
             expect($app->has(RouterInterface::class))->toBeTrue();
@@ -135,7 +141,7 @@ describe('App', function () {
             it('binds value to container', function () {
                 $app = new App();
 
-                $app->bind('greeting', fn() => 'Hello');
+                $app->bind('greeting', fn () => 'Hello');
 
                 expect($app->make('greeting'))->toBe('Hello');
             });
@@ -188,7 +194,7 @@ describe('App', function () {
             it('checks container for binding', function () {
                 $app = new App();
 
-                $app->bind('test', fn() => 'value');
+                $app->bind('test', fn () => 'value');
 
                 expect($app->has('test'))->toBeTrue();
                 expect($app->has('missing'))->toBeFalse();
@@ -209,7 +215,7 @@ describe('App', function () {
             it('is chainable', function () {
                 $app = new App();
 
-                $result = $app->use(fn($r, $n) => $n($r));
+                $result = $app->use(fn ($r, $n) => $n($r));
 
                 expect($result)->toBe($app);
             });
@@ -250,7 +256,7 @@ describe('App', function () {
             it('is chainable', function () {
                 $app = new App();
 
-                $result = $app->configure(fn($app) => null);
+                $result = $app->configure(fn ($app) => null);
 
                 expect($result)->toBe($app);
             });
@@ -278,7 +284,7 @@ describe('App', function () {
                 $app = new App();
 
                 $app->configure(TestProvider::class)
-                    ->configure(fn($app) => $app->bind('another', fn() => 'value'));
+                    ->configure(fn ($app) => $app->bind('another', fn () => 'value'));
 
                 expect($app->make('provided-value'))->toBe('from-provider');
                 expect($app->make('another'))->toBe('value');
@@ -289,8 +295,8 @@ describe('App', function () {
 
                 $app->configure([
                     TestProvider::class,
-                    fn($app) => $app->bind('second', fn() => 'second-value'),
-                    fn($app) => $app->bind('third', fn() => 'third-value'),
+                    fn ($app) => $app->bind('second', fn () => 'second-value'),
+                    fn ($app) => $app->bind('third', fn () => 'third-value'),
                 ]);
 
                 expect($app->make('provided-value'))->toBe('from-provider');
@@ -305,7 +311,7 @@ describe('App', function () {
 
                 $app->routes(function ($router) {
                     expect($router)->toBeInstanceOf(RouterInterface::class);
-                    $router->get('/configured', fn() => 'ok');
+                    $router->get('/configured', fn () => 'ok');
                 });
 
                 expect($app->test()->get('/configured')->body())->toBe('ok');
@@ -314,7 +320,7 @@ describe('App', function () {
             it('accepts a Router instance', function () {
                 $app = new App();
                 $router = new Router();
-                $router->get('/from-router', fn() => 'router-response');
+                $router->get('/from-router', fn () => 'router-response');
 
                 $app->routes($router);
 
@@ -324,7 +330,7 @@ describe('App', function () {
             it('is chainable', function () {
                 $app = new App();
 
-                $result = $app->routes(fn($router) => null);
+                $result = $app->routes(fn ($router) => null);
 
                 expect($result)->toBe($app);
             });
@@ -334,7 +340,7 @@ describe('App', function () {
     describe('handle()', function () {
         it('returns response for matched route', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/', fn() => 'home'));
+            $app->routes(fn ($r) => $r->get('/', fn () => 'home'));
 
             $request = new Request('GET', '/');
             $response = $app->handle($request);
@@ -374,14 +380,14 @@ describe('App', function () {
     describe('response preparation', function () {
         it('returns Response as-is', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/', fn() => new Response('custom', 201)));
+            $app->routes(fn ($r) => $r->get('/', fn () => new Response('custom', 201)));
 
             expect($app->test()->get('/')->status())->toBe(201);
         });
 
         it('converts null to 204', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/', fn() => null));
+            $app->routes(fn ($r) => $r->get('/', fn () => null));
 
             $response = $app->test()->get('/');
 
@@ -391,7 +397,7 @@ describe('App', function () {
 
         it('converts array to JSON', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/', fn() => ['key' => 'value']));
+            $app->routes(fn ($r) => $r->get('/', fn () => ['key' => 'value']));
 
             $response = $app->test()->get('/');
 
@@ -401,7 +407,7 @@ describe('App', function () {
 
         it('converts string to text/plain', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/', fn() => 'Hello'));
+            $app->routes(fn ($r) => $r->get('/', fn () => 'Hello'));
 
             $response = $app->test()->get('/');
 
@@ -411,7 +417,7 @@ describe('App', function () {
 
         it('converts stringable object to text', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/', fn() => new class {
+            $app->routes(fn ($r) => $r->get('/', fn () => new class () {
                 public function __toString(): string
                 {
                     return 'stringable';
@@ -427,35 +433,35 @@ describe('App', function () {
     describe('handler types', function () {
         it('handles closure', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/', fn() => 'closure'));
+            $app->routes(fn ($r) => $r->get('/', fn () => 'closure'));
 
             expect($app->test()->get('/')->body())->toBe('closure');
         });
 
         it('handles array [Controller, method]', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/', [TestController::class, 'index']));
+            $app->routes(fn ($r) => $r->get('/', [TestController::class, 'index']));
 
             expect($app->test()->get('/')->json()['message'])->toBe('Hello from service');
         });
 
         it('handles invokable class string', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/', InvokableController::class));
+            $app->routes(fn ($r) => $r->get('/', InvokableController::class));
 
             expect($app->test()->get('/')->body())->toBe('invoked');
         });
 
         it('injects dependencies into handler', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/', fn(TestService $service) => $service->greet()));
+            $app->routes(fn ($r) => $r->get('/', fn (TestService $service) => $service->greet()));
 
             expect($app->test()->get('/')->body())->toBe('Hello from service');
         });
 
         it('injects request into handler', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/', fn(Request $req) => $req->method()));
+            $app->routes(fn ($r) => $r->get('/', fn (Request $req) => $req->method()));
 
             expect($app->test()->get('/')->body())->toBe('GET');
         });
@@ -464,7 +470,7 @@ describe('App', function () {
     describe('route parameters', function () {
         it('extracts single parameter', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/users/{id}', fn($id) => "User: $id"));
+            $app->routes(fn ($r) => $r->get('/users/{id}', fn ($id) => "User: $id"));
 
             $response = $app->test()->get('/users/123');
 
@@ -473,7 +479,9 @@ describe('App', function () {
 
         it('extracts multiple parameters', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/posts/{postId}/comments/{commentId}', fn($postId, $commentId) =>
+            $app->routes(fn ($r) => $r->get(
+                '/posts/{postId}/comments/{commentId}',
+                fn ($postId, $commentId) =>
                 "Post $postId, Comment $commentId"
             ));
 
@@ -487,9 +495,9 @@ describe('App', function () {
         it('applies middleware to specific route', function () {
             $app = new App();
             $app->routes(function ($router) {
-                $router->get('/protected', fn() => 'secret')
-                    ->use(fn($req, $next) => $next($req)->header('X-Protected', 'yes'));
-                $router->get('/public', fn() => 'open');
+                $router->get('/protected', fn () => 'secret')
+                    ->use(fn ($req, $next) => $next($req)->header('X-Protected', 'yes'));
+                $router->get('/public', fn () => 'open');
             });
 
             expect($app->test()->get('/protected')->getHeader('x-protected'))->toBe(['yes']);
@@ -501,7 +509,7 @@ describe('App', function () {
             $order = [];
 
             $app->routes(function ($router) use (&$order) {
-                $router->get('/test', fn() => 'result')
+                $router->get('/test', fn () => 'result')
                     ->use(function ($req, $next) use (&$order) {
                         $order[] = 'A-before';
                         $response = $next($req);
@@ -523,7 +531,7 @@ describe('App', function () {
 
         it('resolves middleware from container', function () {
             $app = new App();
-            $app->routes(fn($r) => $r->get('/test', fn() => 'ok')->use(TestMiddleware::class));
+            $app->routes(fn ($r) => $r->get('/test', fn () => 'ok')->use(TestMiddleware::class));
 
             $response = $app->test()->get('/test');
 
@@ -544,8 +552,8 @@ describe('App', function () {
             $app = new App();
 
             $app->group('/api', function ($app) {
-                $app->get('/users', fn() => 'users list');
-                $app->get('/posts', fn() => 'posts list');
+                $app->get('/users', fn () => 'users list');
+                $app->get('/posts', fn () => 'posts list');
             });
 
             expect($app->test()->get('/api/users')->body())->toBe('users list');
@@ -558,10 +566,10 @@ describe('App', function () {
 
             $app->group('/api', function ($app) {
                 $app->group('/v1', function ($app) {
-                    $app->get('/users', fn() => 'v1 users');
+                    $app->get('/users', fn () => 'v1 users');
                 });
                 $app->group('/v2', function ($app) {
-                    $app->get('/users', fn() => 'v2 users');
+                    $app->get('/users', fn () => 'v2 users');
                 });
             });
 
@@ -573,8 +581,8 @@ describe('App', function () {
             $app = new App();
 
             $app->group('/api', function ($app) {
-                $app->get('/test', fn() => 'test');
-            })->use(fn($req, $next) => $next($req)->header('X-Group', 'yes'));
+                $app->get('/test', fn () => 'test');
+            })->use(fn ($req, $next) => $next($req)->header('X-Group', 'yes'));
 
             $response = $app->test()->get('/api/test');
 
@@ -586,9 +594,9 @@ describe('App', function () {
             $app = new App();
 
             $app->group('/api', function ($app) {
-                $app->get('/test', fn() => 'ok');
-            })->use(fn($req, $next) => $next($req)->header('X-First', '1'))
-              ->use(fn($req, $next) => $next($req)->header('X-Second', '2'));
+                $app->get('/test', fn () => 'ok');
+            })->use(fn ($req, $next) => $next($req)->header('X-First', '1'))
+              ->use(fn ($req, $next) => $next($req)->header('X-Second', '2'));
 
             $response = $app->test()->get('/api/test');
 
@@ -600,7 +608,7 @@ describe('App', function () {
             $app = new App();
 
             $app->group('/api', function ($app) {
-                $app->get('/test', fn() => 'ok');
+                $app->get('/test', fn () => 'ok');
             })->use(new ParameterizedMiddleware(limit: 100));
 
             $response = $app->test()->get('/api/test');
@@ -613,7 +621,7 @@ describe('App', function () {
 
             try {
                 $app->group('/api', function ($app) {
-                    $app->get('/before', fn() => 'before');
+                    $app->get('/before', fn () => 'before');
                     throw new \RuntimeException('Test exception');
                 });
             } catch (\RuntimeException $e) {
@@ -621,7 +629,7 @@ describe('App', function () {
             }
 
             // Routes outside should not have the prefix
-            $app->get('/outside', fn() => 'outside');
+            $app->get('/outside', fn () => 'outside');
 
             expect($app->test()->get('/outside')->body())->toBe('outside');
             expect($app->test()->get('/api/before')->body())->toBe('before');
@@ -631,8 +639,8 @@ describe('App', function () {
     describe('route() sub-app mounting', function () {
         it('mounts sub-app routes at prefix', function () {
             $api = new App();
-            $api->get('/users', fn() => ['users' => []]);
-            $api->get('/users/{id}', fn($id) => ['id' => $id]);
+            $api->get('/users', fn () => ['users' => []]);
+            $api->get('/users/{id}', fn ($id) => ['id' => $id]);
 
             $app = new App();
             $app->route('/api', $api);
@@ -644,8 +652,8 @@ describe('App', function () {
 
         it('applies sub-app global middleware', function () {
             $api = new App();
-            $api->use(fn($req, $next) => $next($req)->header('X-Sub-App', 'yes'));
-            $api->get('/test', fn() => 'ok');
+            $api->use(fn ($req, $next) => $next($req)->header('X-Sub-App', 'yes'));
+            $api->get('/test', fn () => 'ok');
 
             $app = new App();
             $app->route('/api', $api);
@@ -658,8 +666,8 @@ describe('App', function () {
 
         it('applies sub-app route-level middleware', function () {
             $api = new App();
-            $api->get('/test', fn() => 'ok')
-                ->use(fn($req, $next) => $next($req)->header('X-Route-Middleware', 'applied'));
+            $api->get('/test', fn () => 'ok')
+                ->use(fn ($req, $next) => $next($req)->header('X-Route-Middleware', 'applied'));
 
             $app = new App();
             $app->route('/api', $api);
@@ -671,10 +679,10 @@ describe('App', function () {
 
         it('applies parent app global middleware to mounted routes', function () {
             $api = new App();
-            $api->get('/test', fn() => 'ok');
+            $api->get('/test', fn () => 'ok');
 
             $app = new App();
-            $app->use(fn($req, $next) => $next($req)->header('X-Parent', 'yes'));
+            $app->use(fn ($req, $next) => $next($req)->header('X-Parent', 'yes'));
             $app->route('/api', $api);
 
             $response = $app->test()->get('/api/test');
@@ -684,10 +692,10 @@ describe('App', function () {
 
         it('chains multiple sub-apps', function () {
             $api = new App();
-            $api->get('/users', fn() => 'api users');
+            $api->get('/users', fn () => 'api users');
 
             $admin = new App();
-            $admin->get('/dashboard', fn() => 'admin dashboard');
+            $admin->get('/dashboard', fn () => 'admin dashboard');
 
             $app = new App();
             $app->route('/api', $api)
@@ -699,7 +707,7 @@ describe('App', function () {
 
         it('supports nested sub-apps', function () {
             $v1 = new App();
-            $v1->get('/users', fn() => 'v1 users');
+            $v1->get('/users', fn () => 'v1 users');
 
             $api = new App();
             $api->route('/v1', $v1);
@@ -712,8 +720,8 @@ describe('App', function () {
 
         it('mounts sub-app at root prefix', function () {
             $web = new App();
-            $web->get('/', fn() => 'home');
-            $web->get('/about', fn() => 'about');
+            $web->get('/', fn () => 'home');
+            $web->get('/about', fn () => 'about');
 
             $app = new App();
             $app->route('', $web);
@@ -724,10 +732,10 @@ describe('App', function () {
 
         it('combines sub-app and inline routes', function () {
             $api = new App();
-            $api->get('/users', fn() => 'users');
+            $api->get('/users', fn () => 'users');
 
             $app = new App();
-            $app->get('/health', fn() => 'ok');
+            $app->get('/health', fn () => 'ok');
             $app->route('/api', $api);
 
             expect($app->test()->get('/health')->body())->toBe('ok');
@@ -740,10 +748,10 @@ describe('App', function () {
             $app = new App();
 
             $app->group('/api', function ($app) {
-                $app->get('/users', fn() => 'users');
+                $app->get('/users', fn () => 'users');
             });
 
-            $app->get('/web', fn() => 'web');
+            $app->get('/web', fn () => 'web');
 
             // Simulate multiple requests (as in worker mode)
             for ($i = 0; $i < 3; $i++) {
@@ -758,7 +766,7 @@ describe('App', function () {
             $callCount = 0;
 
             $app->group('/api', function ($app) {
-                $app->get('/test', fn() => 'ok');
+                $app->get('/test', fn () => 'ok');
             })->use(function ($req, $next) use (&$callCount) {
                 $callCount++;
                 return $next($req)->header('X-Count', (string) $callCount);

@@ -6,7 +6,7 @@ use Verge\Concerns\HasMiddleware;
 
 function createMiddlewareInstance(): object
 {
-    return new class {
+    return new class () {
         use HasMiddleware;
     };
 }
@@ -16,7 +16,7 @@ describe('HasMiddleware', function () {
     describe('use()', function () {
         it('adds callable middleware', function () {
             $instance = createMiddlewareInstance();
-            $middleware = fn($req, $next) => $next($req);
+            $middleware = fn ($req, $next) => $next($req);
 
             $result = $instance->use($middleware);
 
@@ -33,8 +33,8 @@ describe('HasMiddleware', function () {
 
         it('adds multiple middleware in order', function () {
             $instance = createMiddlewareInstance();
-            $first = fn($req, $next) => $next($req);
-            $second = fn($req, $next) => $next($req);
+            $first = fn ($req, $next) => $next($req);
+            $second = fn ($req, $next) => $next($req);
             $third = 'ThirdMiddleware';
 
             $instance->use($first)->use($second)->use($third);

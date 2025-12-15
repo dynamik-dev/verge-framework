@@ -17,17 +17,23 @@ class SimpleClass
 
 class ClassWithDependency
 {
-    public function __construct(public SimpleClass $simple) {}
+    public function __construct(public SimpleClass $simple)
+    {
+    }
 }
 
 class ClassWithDefaultValue
 {
-    public function __construct(public string $name = 'default') {}
+    public function __construct(public string $name = 'default')
+    {
+    }
 }
 
 class ClassWithBuiltinParam
 {
-    public function __construct(public string $required) {}
+    public function __construct(public string $required)
+    {
+    }
 }
 
 class ClassWithMixedParams
@@ -36,14 +42,21 @@ class ClassWithMixedParams
         public SimpleClass $service,
         public string $name,
         public int $count = 10
-    ) {}
+    ) {
+    }
 }
 
-interface TestInterface {}
+interface TestInterface
+{
+}
 
-class TestImplementation implements TestInterface {}
+class TestImplementation implements TestInterface
+{
+}
 
-abstract class AbstractClass {}
+abstract class AbstractClass
+{
+}
 
 class InvokableClass
 {
@@ -67,7 +80,7 @@ describe('Container', function () {
         it('binds a closure', function () {
             $container = new Container();
 
-            $container->bind('greeting', fn() => 'Hello World');
+            $container->bind('greeting', fn () => 'Hello World');
 
             expect($container->get('greeting'))->toBe('Hello World');
         });
@@ -82,15 +95,15 @@ describe('Container', function () {
 
         it('passes container to closure', function () {
             $container = new Container();
-            $container->bind('dep', fn() => 'dependency');
-            $container->bind('service', fn(Container $c) => 'got: ' . $c->get('dep'));
+            $container->bind('dep', fn () => 'dependency');
+            $container->bind('service', fn (Container $c) => 'got: ' . $c->get('dep'));
 
             expect($container->get('service'))->toBe('got: dependency');
         });
 
         it('creates new instance each time', function () {
             $container = new Container();
-            $container->bind(SimpleClass::class, fn() => new SimpleClass());
+            $container->bind(SimpleClass::class, fn () => new SimpleClass());
 
             $first = $container->get(SimpleClass::class);
             $second = $container->get(SimpleClass::class);
@@ -102,7 +115,7 @@ describe('Container', function () {
     describe('singleton()', function () {
         it('returns same instance', function () {
             $container = new Container();
-            $container->singleton(SimpleClass::class, fn() => new SimpleClass());
+            $container->singleton(SimpleClass::class, fn () => new SimpleClass());
 
             $first = $container->get(SimpleClass::class);
             $second = $container->get(SimpleClass::class);
@@ -129,7 +142,7 @@ describe('Container', function () {
     describe('get()', function () {
         it('resolves bound value', function () {
             $container = new Container();
-            $container->bind('value', fn() => 42);
+            $container->bind('value', fn () => 42);
 
             expect($container->get('value'))->toBe(42);
         });
@@ -145,7 +158,7 @@ describe('Container', function () {
         it('throws for non-existent class', function () {
             $container = new Container();
 
-            expect(fn() => $container->get('NonExistentClass'))
+            expect(fn () => $container->get('NonExistentClass'))
                 ->toThrow(ContainerException::class);
         });
     });
@@ -153,7 +166,7 @@ describe('Container', function () {
     describe('has()', function () {
         it('returns true for bound values', function () {
             $container = new Container();
-            $container->bind('test', fn() => 'value');
+            $container->bind('test', fn () => 'value');
 
             expect($container->has('test'))->toBeTrue();
         });
@@ -190,7 +203,7 @@ describe('Container', function () {
 
         it('resolves binding', function () {
             $container = new Container();
-            $container->bind('test', fn() => 'resolved');
+            $container->bind('test', fn () => 'resolved');
 
             expect($container->resolve('test'))->toBe('resolved');
         });
@@ -215,7 +228,7 @@ describe('Container', function () {
 
         it('skips cache when parameters provided', function () {
             $container = new Container();
-            $container->singleton(ClassWithMixedParams::class, fn($c) => new ClassWithMixedParams(
+            $container->singleton(ClassWithMixedParams::class, fn ($c) => new ClassWithMixedParams(
                 $c->resolve(SimpleClass::class),
                 'cached',
                 99
@@ -261,28 +274,28 @@ describe('Container', function () {
         it('throws for non-existent class', function () {
             $container = new Container();
 
-            expect(fn() => $container->build('NonExistentClass'))
+            expect(fn () => $container->build('NonExistentClass'))
                 ->toThrow(ContainerException::class, 'does not exist');
         });
 
         it('throws for abstract class', function () {
             $container = new Container();
 
-            expect(fn() => $container->build(AbstractClass::class))
+            expect(fn () => $container->build(AbstractClass::class))
                 ->toThrow(ContainerException::class, 'not instantiable');
         });
 
         it('throws for interface', function () {
             $container = new Container();
 
-            expect(fn() => $container->build(TestInterface::class))
+            expect(fn () => $container->build(TestInterface::class))
                 ->toThrow(ContainerException::class);
         });
 
         it('throws for unresolvable parameter', function () {
             $container = new Container();
 
-            expect(fn() => $container->build(ClassWithBuiltinParam::class))
+            expect(fn () => $container->build(ClassWithBuiltinParam::class))
                 ->toThrow(ContainerException::class, 'Cannot resolve parameter');
         });
 
@@ -320,7 +333,7 @@ describe('Container', function () {
         it('calls closure', function () {
             $container = new Container();
 
-            $result = $container->call(fn() => 'hello');
+            $result = $container->call(fn () => 'hello');
 
             expect($result)->toBe('hello');
         });
@@ -329,7 +342,7 @@ describe('Container', function () {
             $container = new Container();
 
             $result = $container->call(
-                fn(string $name) => "Hello, $name",
+                fn (string $name) => "Hello, $name",
                 ['name' => 'World']
             );
 
@@ -339,7 +352,7 @@ describe('Container', function () {
         it('auto-wires closure dependencies', function () {
             $container = new Container();
 
-            $result = $container->call(fn(SimpleClass $simple) => $simple->hello());
+            $result = $container->call(fn (SimpleClass $simple) => $simple->hello());
 
             expect($result)->toBe('hello');
         });
@@ -367,7 +380,7 @@ describe('Container', function () {
             $custom = new SimpleClass();
 
             $result = $container->call(
-                fn(SimpleClass $simple) => $simple,
+                fn (SimpleClass $simple) => $simple,
                 ['simple' => $custom]
             );
 
@@ -377,7 +390,7 @@ describe('Container', function () {
         it('uses default values', function () {
             $container = new Container();
 
-            $result = $container->call(fn(string $name = 'default') => $name);
+            $result = $container->call(fn (string $name = 'default') => $name);
 
             expect($result)->toBe('default');
         });
@@ -386,7 +399,7 @@ describe('Container', function () {
             $container = new Container();
 
             // PHP's callable type hint throws TypeError for non-existent functions
-            expect(fn() => $container->call('not_a_function'))
+            expect(fn () => $container->call('not_a_function'))
                 ->toThrow(TypeError::class);
         });
     });
@@ -394,7 +407,7 @@ describe('Container', function () {
     describe('scoped()', function () {
         it('returns same instance within scope', function () {
             $container = new Container();
-            $container->scoped(SimpleClass::class, fn() => new SimpleClass());
+            $container->scoped(SimpleClass::class, fn () => new SimpleClass());
 
             $first = $container->get(SimpleClass::class);
             $second = $container->get(SimpleClass::class);
@@ -438,7 +451,7 @@ describe('Container', function () {
     describe('forgetScopedInstances()', function () {
         it('clears scoped instances', function () {
             $container = new Container();
-            $container->scoped(SimpleClass::class, fn() => new SimpleClass());
+            $container->scoped(SimpleClass::class, fn () => new SimpleClass());
 
             $first = $container->get(SimpleClass::class);
             $container->forgetScopedInstances();
@@ -449,7 +462,7 @@ describe('Container', function () {
 
         it('does not clear singleton instances', function () {
             $container = new Container();
-            $container->singleton(SimpleClass::class, fn() => new SimpleClass());
+            $container->singleton(SimpleClass::class, fn () => new SimpleClass());
 
             $first = $container->get(SimpleClass::class);
             $container->forgetScopedInstances();

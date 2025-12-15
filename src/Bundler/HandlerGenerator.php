@@ -12,7 +12,8 @@ class HandlerGenerator
     public function __construct(
         private string $namespace = 'App\\Handlers',
         private string $outputPath = 'dist/Handlers',
-    ) {}
+    ) {
+    }
 
     /**
      * Generate a handler class name from HTTP method and path.
@@ -147,7 +148,7 @@ PHP;
         }
 
         $statements = array_map(
-            fn($class) => "use {$class};",
+            fn ($class) => "use {$class};",
             array_keys($uses)
         );
 

@@ -17,7 +17,8 @@ class TestClient
 
     public function __construct(
         protected App $app
-    ) {}
+    ) {
+    }
 
     public function withHeader(string $name, string $value): static
     {
@@ -88,7 +89,7 @@ class TestClient
         // Add cookies to headers
         if (!empty($this->cookies)) {
             $cookieString = implode('; ', array_map(
-                fn($k, $v) => "$k=$v",
+                fn ($k, $v) => "$k=$v",
                 array_keys($this->cookies),
                 $this->cookies
             ));
@@ -102,7 +103,7 @@ class TestClient
 
         $encoded = !empty($body) ? json_encode($body) : null;
         if ($encoded === false) {
-             throw new \RuntimeException('JSON encode failed: ' . json_last_error_msg());
+            throw new \RuntimeException('JSON encode failed: ' . json_last_error_msg());
         }
         $bodyString = $encoded;
 

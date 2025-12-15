@@ -12,7 +12,8 @@ use Verge\Log\LoggerInterface;
 use Verge\Log\Drivers\ArrayLogDriver;
 use Verge\Log\Drivers\StreamLogDriver;
 
-function clearDriverEnv(): void {
+function clearDriverEnv(): void
+{
     $vars = ['CACHE_DRIVER', 'LOG_DRIVER', 'QUEUE_DRIVER', 'CUSTOM_DRIVER', 'CUSTOM_CACHE_URL', 'LOG_PATH', 'LOG_LEVEL'];
     foreach ($vars as $var) {
         putenv($var);
@@ -37,7 +38,7 @@ describe('Driver System', function () {
         it('registers a driver with three arguments', function () {
             $app = new App();
 
-            $result = $app->driver('cache', 'custom', fn() => new MemoryCacheDriver());
+            $result = $app->driver('cache', 'custom', fn () => new MemoryCacheDriver());
 
             expect($result)->toBe($app); // fluent
         });
@@ -45,8 +46,8 @@ describe('Driver System', function () {
         it('allows registering multiple drivers for same service', function () {
             $app = new App();
 
-            $app->driver('queue', 'sync', fn() => 'sync-driver');
-            $app->driver('queue', 'redis', fn() => 'redis-driver');
+            $app->driver('queue', 'sync', fn () => 'sync-driver');
+            $app->driver('queue', 'redis', fn () => 'redis-driver');
 
             putenv('QUEUE_DRIVER=sync');
             expect($app->driver('queue'))->toBe('sync-driver');
@@ -72,7 +73,7 @@ describe('Driver System', function () {
             $app = new App();
 
             // Use a service with no default drivers registered
-            expect(fn() => $app->driver('mail'))
+            expect(fn () => $app->driver('mail'))
                 ->toThrow(RuntimeException::class, "No driver configured for 'mail'. Set the MAIL_DRIVER environment variable.");
         });
 
@@ -80,17 +81,17 @@ describe('Driver System', function () {
             putenv('CACHE_DRIVER=redis');
             $app = new App();
 
-            expect(fn() => $app->driver('cache'))
+            expect(fn () => $app->driver('cache'))
                 ->toThrow(RuntimeException::class, "Unknown cache driver 'redis'");
         });
 
         it('lists available drivers in error message', function () {
             putenv('CACHE_DRIVER=invalid');
             $app = new App();
-            $app->driver('cache', 'memory', fn() => new MemoryCacheDriver());
-            $app->driver('cache', 'file', fn() => 'file-driver');
+            $app->driver('cache', 'memory', fn () => new MemoryCacheDriver());
+            $app->driver('cache', 'file', fn () => 'file-driver');
 
-            expect(fn() => $app->driver('cache'))
+            expect(fn () => $app->driver('cache'))
                 ->toThrow(RuntimeException::class, 'Available drivers: memory, file');
         });
 
@@ -116,7 +117,7 @@ describe('Driver System', function () {
         it('throws with two arguments', function () {
             $app = new App();
 
-            expect(fn() => $app->driver('cache', 'memory'))
+            expect(fn () => $app->driver('cache', 'memory'))
                 ->toThrow(InvalidArgumentException::class);
         });
 
@@ -191,7 +192,7 @@ describe('Driver System', function () {
             $app = new App();
 
             $customDriver = new MemoryCacheDriver();
-            $app->driver('cache', 'turso', fn() => $customDriver);
+            $app->driver('cache', 'turso', fn () => $customDriver);
 
             expect($app->driver('cache'))->toBe($customDriver);
         });
@@ -201,7 +202,7 @@ describe('Driver System', function () {
             $app = new App();
 
             $customDriver = new MemoryCacheDriver();
-            $app->driver('cache', 'memory', fn() => $customDriver);
+            $app->driver('cache', 'memory', fn () => $customDriver);
 
             expect($app->driver('cache'))->toBe($customDriver);
         });

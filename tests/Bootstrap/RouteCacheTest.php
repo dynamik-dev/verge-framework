@@ -32,7 +32,7 @@ describe('RouteCache', function () {
 
         it('skips routes with closure handlers', function () {
             $router = new Router();
-            $router->add('GET', '/', fn() => 'Hello');
+            $router->add('GET', '/', fn () => 'Hello');
             $router->add('GET', '/users', ['UserController', 'index']);
 
             $cache = new RouteCache($this->cachePath);
@@ -47,7 +47,7 @@ describe('RouteCache', function () {
         it('skips routes with closure middleware', function () {
             $router = new Router();
             $route = $router->add('GET', '/protected', ['UserController', 'index']);
-            $route->use(fn($request, $next) => $next($request));
+            $route->use(fn ($request, $next) => $next($request));
 
             $cache = new RouteCache($this->cachePath);
             $result = $cache->warm($router);
@@ -126,7 +126,7 @@ describe('RouteCache', function () {
         it('throws when cache does not exist', function () {
             $cache = new RouteCache('/nonexistent/path.php');
 
-            expect(fn() => $cache->load())
+            expect(fn () => $cache->load())
                 ->toThrow(\RuntimeException::class, 'Route cache not found');
         });
     });
@@ -170,7 +170,7 @@ describe('RouteCache', function () {
     describe('getWarnings()', function () {
         it('formats skipped routes as warnings', function () {
             $router = new Router();
-            $router->add('GET', '/closure', fn() => 'test');
+            $router->add('GET', '/closure', fn () => 'test');
 
             $cache = new RouteCache($this->cachePath);
             $result = $cache->warm($router);

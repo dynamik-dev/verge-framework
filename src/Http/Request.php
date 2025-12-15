@@ -62,7 +62,7 @@ class Request implements RequestInterface
         $files = $_FILES;
 
         $parsedBody = [];
-        if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
+        if (in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
             $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
             // Ensure content type is string
             if (!is_string($contentType)) {
@@ -71,7 +71,7 @@ class Request implements RequestInterface
             if (str_contains($contentType, 'application/json')) {
                 $decoded = json_decode($body ?? '', true);
                 if (is_array($decoded)) {
-                     $parsedBody = $decoded;
+                    $parsedBody = $decoded;
                 }
             } else {
                 $parsedBody = $_POST;
@@ -92,7 +92,7 @@ class Request implements RequestInterface
             if (str_starts_with($key, 'HTTP_')) {
                 $name = str_replace('_', '-', substr($key, 5));
                 if (is_array($value)) {
-                    $headers[$name] = array_map(fn($v) => is_scalar($v) || $v instanceof \Stringable ? (string) $v : '', $value);
+                    $headers[$name] = array_map(fn ($v) => is_scalar($v) || $v instanceof \Stringable ? (string) $v : '', $value);
                 } else {
                     $headers[$name] = is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
                 }

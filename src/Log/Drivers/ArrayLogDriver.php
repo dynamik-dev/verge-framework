@@ -92,7 +92,7 @@ class ArrayLogDriver implements LoggerInterface
     {
         return array_values(array_filter(
             $this->logs,
-            fn($log) => $log['level'] === $level
+            fn ($log) => $log['level'] === $level
         ));
     }
 

@@ -15,7 +15,7 @@ describe('App Lifecycle', function () {
                 $readyFired = true;
             });
 
-            $app->get('/', fn() => 'ok');
+            $app->get('/', fn () => 'ok');
 
             expect($readyFired)->toBeFalse();
 
@@ -32,7 +32,7 @@ describe('App Lifecycle', function () {
                 $count++;
             });
 
-            $app->get('/', fn() => 'ok');
+            $app->get('/', fn () => 'ok');
             $app->test()->get('/');
             $app->test()->get('/');
             $app->test()->get('/');
@@ -45,7 +45,7 @@ describe('App Lifecycle', function () {
 
             $app->configure(function ($app) {
                 $app->on('app.ready', function () use ($app) {
-                    $app->get('/deferred', fn() => 'deferred route');
+                    $app->get('/deferred', fn () => 'deferred route');
                 });
             });
 
@@ -57,14 +57,14 @@ describe('App Lifecycle', function () {
 
             // First provider registers a service
             $app->configure(function ($app) {
-                $app->singleton('greeting', fn() => 'Hello from service');
+                $app->singleton('greeting', fn () => 'Hello from service');
             });
 
             // Second provider uses that service on app.ready
             $app->configure(function ($app) {
                 $app->on('app.ready', function () use ($app) {
                     $greeting = $app->make('greeting');
-                    $app->get('/greeting', fn() => $greeting);
+                    $app->get('/greeting', fn () => $greeting);
                 });
             });
 
@@ -81,7 +81,7 @@ describe('App Lifecycle', function () {
 
         it('returns true after first request', function () {
             $app = new App();
-            $app->get('/', fn() => 'ok');
+            $app->get('/', fn () => 'ok');
 
             $app->test()->get('/');
 
@@ -101,9 +101,9 @@ describe('App Lifecycle', function () {
             $app = new App();
 
             $app->configure(function ($app) {
-                $app->singleton('config.value', fn() => 42);
+                $app->singleton('config.value', fn () => 42);
                 $app->on('app.ready', function () use ($app) {
-                    $app->get('/config', fn() => (string) $app->make('config.value'));
+                    $app->get('/config', fn () => (string) $app->make('config.value'));
                 });
             });
 
@@ -128,7 +128,7 @@ describe('App Lifecycle', function () {
                 });
             });
 
-            $app->get('/', fn() => 'ok');
+            $app->get('/', fn () => 'ok');
             $app->test()->get('/');
 
             expect($order)->toBe([
@@ -148,7 +148,7 @@ class TestLifecycleProvider
     public function __invoke(App $app): void
     {
         $app->on('app.ready', function () use ($app) {
-            $app->get('/provider-route', fn() => 'from provider');
+            $app->get('/provider-route', fn () => 'from provider');
         });
     }
 }

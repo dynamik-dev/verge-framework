@@ -141,7 +141,7 @@ describe('CachedRouter', function () {
             $cacheData = ['static' => [], 'dynamic' => [], 'named' => []];
             $router = new CachedRouter($cacheData);
 
-            expect(fn() => $router->url('unknown'))
+            expect(fn () => $router->url('unknown'))
                 ->toThrow(\Verge\Routing\RouteNotFoundException::class);
         });
 
@@ -165,15 +165,15 @@ describe('CachedRouter', function () {
         it('throws when trying to add routes', function () {
             $router = new CachedRouter(['static' => [], 'dynamic' => [], 'named' => []]);
 
-            expect(fn() => $router->add('GET', '/test', fn() => 'test'))
+            expect(fn () => $router->add('GET', '/test', fn () => 'test'))
                 ->toThrow(\RuntimeException::class, 'Cannot add routes to a cached router');
         });
 
         it('throws when trying to register named routes', function () {
             $router = new CachedRouter(['static' => [], 'dynamic' => [], 'named' => []]);
-            $route = new \Verge\Routing\Route('GET', '/test', fn() => 'test', '#^/test$#');
+            $route = new \Verge\Routing\Route('GET', '/test', fn () => 'test', '#^/test$#');
 
-            expect(fn() => $router->registerNamedRoute('test', $route))
+            expect(fn () => $router->registerNamedRoute('test', $route))
                 ->toThrow(\RuntimeException::class, 'Cannot register named routes');
         });
     });

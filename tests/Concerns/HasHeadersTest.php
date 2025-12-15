@@ -6,7 +6,7 @@ use Verge\Concerns\HasHeaders;
 
 function createHeadersInstance(array $headers = []): object
 {
-    return new class($headers) {
+    return new class ($headers) {
         use HasHeaders;
 
         protected array $headers = [];

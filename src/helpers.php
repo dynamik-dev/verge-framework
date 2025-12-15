@@ -37,7 +37,7 @@ namespace Verge {
         $json = json_encode($data);
 
         if ($json === false) {
-             throw new \InvalidArgumentException('JSON encode failed: ' . json_last_error_msg());
+            throw new \InvalidArgumentException('JSON encode failed: ' . json_last_error_msg());
         }
 
         return new Response($json, $status, $headers);

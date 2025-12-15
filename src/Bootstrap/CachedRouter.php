@@ -156,10 +156,10 @@ class CachedRouter implements RouterInterface
             if (isset($params[$paramName])) {
                 // Find and replace the parameter placeholder
                 $pattern = '/\{' . preg_quote($paramName, '/') . '\??(?::[^{}]*(?:\{[^{}]*\}[^{}]*)*)?\}/';
-                
+
                 $val = $params[$paramName];
                 $strVal = is_scalar($val) || $val instanceof \Stringable ? (string) $val : '';
-                
+
                 $path = preg_replace($pattern, $strVal, $path) ?? $path;
                 $usedParams[] = $paramName;
             }

@@ -14,7 +14,8 @@ class ContainerCache
 {
     public function __construct(
         private string $cachePath
-    ) {}
+    ) {
+    }
 
     /**
      * Warm the container cache with reflection data for given classes.
@@ -140,7 +141,7 @@ class ContainerCache
     private function reflectClass(string $class): array
     {
         if (!class_exists($class)) {
-             throw new \ReflectionException("Class {$class} does not exist");
+            throw new \ReflectionException("Class {$class} does not exist");
         }
         $reflector = new ReflectionClass($class);
 

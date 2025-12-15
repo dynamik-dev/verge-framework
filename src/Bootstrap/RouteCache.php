@@ -15,7 +15,8 @@ class RouteCache
 {
     public function __construct(
         private string $cachePath
-    ) {}
+    ) {
+    }
 
     /**
      * Warm the route cache by extracting and optimizing routes from the router.

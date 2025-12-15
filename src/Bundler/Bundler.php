@@ -266,7 +266,7 @@ PHP;
     {
         $handler = $route->handler;
         if (!($handler instanceof Closure)) {
-             return null;
+            return null;
         }
         $closureInfo = $this->extractor->extract($handler);
 

@@ -24,13 +24,13 @@ class TestEventListener
 
 describe('EventDispatcher', function () {
 
-    beforeEach(fn() => TestEventListener::reset());
+    beforeEach(fn () => TestEventListener::reset());
 
     describe('on()', function () {
         it('registers closure listener', function () {
             $container = new Container();
             $dispatcher = new EventDispatcher($container);
-            $listener = fn($event, $payload) => null;
+            $listener = fn ($event, $payload) => null;
 
             $dispatcher->on('test.event', $listener);
 
@@ -49,8 +49,8 @@ describe('EventDispatcher', function () {
         it('registers multiple listeners for same event', function () {
             $container = new Container();
             $dispatcher = new EventDispatcher($container);
-            $listener1 = fn() => null;
-            $listener2 = fn() => null;
+            $listener1 = fn () => null;
+            $listener2 = fn () => null;
 
             $dispatcher->on('test.event', $listener1);
             $dispatcher->on('test.event', $listener2);
@@ -195,7 +195,7 @@ describe('EventDispatcher', function () {
             $container = new Container();
             $dispatcher = new EventDispatcher($container);
 
-            $dispatcher->on('test.event', fn() => null);
+            $dispatcher->on('test.event', fn () => null);
 
             expect($dispatcher->hasListeners('test.event'))->toBeTrue();
         });
@@ -204,7 +204,7 @@ describe('EventDispatcher', function () {
             $container = new Container();
             $dispatcher = new EventDispatcher($container);
 
-            $dispatcher->on('user.*', fn() => null);
+            $dispatcher->on('user.*', fn () => null);
 
             expect($dispatcher->hasListeners('user.created'))->toBeTrue();
             expect($dispatcher->hasListeners('post.created'))->toBeFalse();
@@ -214,7 +214,7 @@ describe('EventDispatcher', function () {
             $container = new Container();
             $dispatcher = new EventDispatcher($container);
 
-            $dispatcher->on('*', fn() => null);
+            $dispatcher->on('*', fn () => null);
 
             expect($dispatcher->hasListeners('any.event'))->toBeTrue();
         });
@@ -225,8 +225,8 @@ describe('EventDispatcher', function () {
             $container = new Container();
             $dispatcher = new EventDispatcher($container);
 
-            $dispatcher->on('test.event', fn() => null);
-            $dispatcher->on('test.event', fn() => null);
+            $dispatcher->on('test.event', fn () => null);
+            $dispatcher->on('test.event', fn () => null);
             $dispatcher->forget('test.event');
 
             expect($dispatcher->getListeners('test.event'))->toBe([]);
@@ -254,8 +254,8 @@ describe('App Events Integration', function () {
         it('is chainable', function () {
             $app = new App();
 
-            $result = $app->on('event1', fn() => null)
-                ->on('event2', fn() => null);
+            $result = $app->on('event1', fn () => null)
+                ->on('event2', fn () => null);
 
             expect($result)->toBe($app);
         });
@@ -263,9 +263,9 @@ describe('App Events Integration', function () {
         it('chains with route definitions', function () {
             $app = new App();
 
-            $app->on('request.received', fn() => null)
-                ->get('/test', fn() => 'ok')
-                ->on('response.sent', fn() => null);
+            $app->on('request.received', fn () => null)
+                ->get('/test', fn () => 'ok')
+                ->on('response.sent', fn () => null);
 
             expect($app->test()->get('/test')->body())->toBe('ok');
         });
@@ -301,7 +301,7 @@ describe('App Events Integration', function () {
 
             expect($app->hasListeners('test.event'))->toBeFalse();
 
-            $app->on('test.event', fn() => null);
+            $app->on('test.event', fn () => null);
 
             expect($app->hasListeners('test.event'))->toBeTrue();
         });
@@ -338,7 +338,7 @@ describe('App Events Integration', function () {
             });
 
             $app->emit('app.starting');
-            $app->get('/', fn() => 'home');
+            $app->get('/', fn () => 'home');
             $app->emit('app.started');
 
             expect($events)->toBe(['starting', 'started']);

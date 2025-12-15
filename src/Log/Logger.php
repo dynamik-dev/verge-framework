@@ -11,7 +11,8 @@ class Logger
 
     public function __construct(
         protected LoggerInterface $driver
-    ) {}
+    ) {
+    }
 
     /**
      * Add default context to all log entries.

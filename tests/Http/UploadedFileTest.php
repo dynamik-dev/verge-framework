@@ -56,7 +56,7 @@ describe('UploadedFile', function () {
             it('throws when no tmp file', function () {
                 $file = new UploadedFile([]);
 
-                expect(fn() => $file->getStream())
+                expect(fn () => $file->getStream())
                     ->toThrow(RuntimeException::class, 'No temporary file available');
             });
 
@@ -73,7 +73,7 @@ describe('UploadedFile', function () {
 
                 $file->moveTo($targetDir . '/moved.txt');
 
-                expect(fn() => $file->getStream())
+                expect(fn () => $file->getStream())
                     ->toThrow(RuntimeException::class, 'already been moved');
 
                 // Cleanup
@@ -138,7 +138,7 @@ describe('UploadedFile', function () {
 
                 $file->moveTo($targetDir . '/first.txt');
 
-                expect(fn() => $file->moveTo($targetDir . '/second.txt'))
+                expect(fn () => $file->moveTo($targetDir . '/second.txt'))
                     ->toThrow(RuntimeException::class, 'already been moved');
 
                 // Cleanup
@@ -152,7 +152,7 @@ describe('UploadedFile', function () {
                     'error' => UPLOAD_ERR_INI_SIZE,
                 ]);
 
-                expect(fn() => $file->moveTo('/tmp/target.txt'))
+                expect(fn () => $file->moveTo('/tmp/target.txt'))
                     ->toThrow(RuntimeException::class, 'upload error');
             });
 
@@ -161,7 +161,7 @@ describe('UploadedFile', function () {
                     'error' => UPLOAD_ERR_OK,
                 ]);
 
-                expect(fn() => $file->moveTo('/tmp/target.txt'))
+                expect(fn () => $file->moveTo('/tmp/target.txt'))
                     ->toThrow(RuntimeException::class, 'No temporary file available');
             });
         });

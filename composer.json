@@ -31,10 +31,13 @@
     },
     "require-dev": {
         "pestphp/pest": "^2.0",
-        "phpstan/phpstan": "^2.1"
+        "phpstan/phpstan": "^2.1",
+        "friendsofphp/php-cs-fixer": "^3.92"
     },
     "scripts": {
         "test": "pest --parallel",
+        "lint": "php-cs-fixer fix --dry-run --diff",
+        "fix": "php-cs-fixer fix",
         "phpstan": "phpstan analyse"
     },
     "config": {

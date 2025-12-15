@@ -14,7 +14,7 @@ describe('RoutesBuilder', function () {
             $router = new Router();
             $builder = new RoutesBuilder($router);
 
-            $route = $builder->get('/test', fn() => 'test');
+            $route = $builder->get('/test', fn () => 'test');
 
             expect($route)->not->toBeNull();
             expect($router->match(new Request('GET', '/test'))->matched)->toBeTrue();
@@ -24,7 +24,7 @@ describe('RoutesBuilder', function () {
             $router = new Router();
             $builder = new RoutesBuilder($router);
 
-            $builder->post('/test', fn() => 'test');
+            $builder->post('/test', fn () => 'test');
 
             expect($router->match(new Request('POST', '/test'))->matched)->toBeTrue();
         });
@@ -33,7 +33,7 @@ describe('RoutesBuilder', function () {
             $router = new Router();
             $builder = new RoutesBuilder($router);
 
-            $builder->put('/test', fn() => 'test');
+            $builder->put('/test', fn () => 'test');
 
             expect($router->match(new Request('PUT', '/test'))->matched)->toBeTrue();
         });
@@ -42,7 +42,7 @@ describe('RoutesBuilder', function () {
             $router = new Router();
             $builder = new RoutesBuilder($router);
 
-            $builder->patch('/test', fn() => 'test');
+            $builder->patch('/test', fn () => 'test');
 
             expect($router->match(new Request('PATCH', '/test'))->matched)->toBeTrue();
         });
@@ -51,7 +51,7 @@ describe('RoutesBuilder', function () {
             $router = new Router();
             $builder = new RoutesBuilder($router);
 
-            $builder->delete('/test', fn() => 'test');
+            $builder->delete('/test', fn () => 'test');
 
             expect($router->match(new Request('DELETE', '/test'))->matched)->toBeTrue();
         });
@@ -60,9 +60,9 @@ describe('RoutesBuilder', function () {
             $router = new Router();
             $builder = new RoutesBuilder($router);
 
-            $builder->get('/one', fn() => 'one');
-            $builder->post('/two', fn() => 'two');
-            $builder->put('/three', fn() => 'three');
+            $builder->get('/one', fn () => 'one');
+            $builder->post('/two', fn () => 'two');
+            $builder->put('/three', fn () => 'three');
 
             expect($builder->getRoutes())->toHaveCount(3);
         });
@@ -73,10 +73,10 @@ describe('RoutesBuilder', function () {
             $router = new Router();
             $builder = new RoutesBuilder($router);
 
-            $middleware = fn($req, $next) => $next($req)->header('X-Test', 'applied');
+            $middleware = fn ($req, $next) => $next($req)->header('X-Test', 'applied');
 
-            $builder->get('/one', fn() => 'one');
-            $builder->get('/two', fn() => 'two');
+            $builder->get('/one', fn () => 'one');
+            $builder->get('/two', fn () => 'two');
             $builder->use($middleware);
 
             $routes = $builder->getRoutes();
@@ -89,11 +89,11 @@ describe('RoutesBuilder', function () {
             $builder = new RoutesBuilder($router);
 
             $result = $builder
-                ->get('/test', fn() => 'test')
-                ->use(fn($req, $next) => $next($req));
+                ->get('/test', fn () => 'test')
+                ->use(fn ($req, $next) => $next($req));
 
             // use() on route returns Route, but we're testing builder's use()
-            $builder->use(fn($req, $next) => $next($req));
+            $builder->use(fn ($req, $next) => $next($req));
 
             expect($builder->getRoutes()[0]->getMiddleware())->toHaveCount(2);
         });
@@ -102,11 +102,11 @@ describe('RoutesBuilder', function () {
             $router = new Router();
             $builder = new RoutesBuilder($router);
 
-            $builder->get('/test', fn() => 'test');
+            $builder->get('/test', fn () => 'test');
             $builder
-                ->use(fn($req, $next) => $next($req))
-                ->use(fn($req, $next) => $next($req))
-                ->use(fn($req, $next) => $next($req));
+                ->use(fn ($req, $next) => $next($req))
+                ->use(fn ($req, $next) => $next($req))
+                ->use(fn ($req, $next) => $next($req));
 
             expect($builder->getRoutes()[0]->getMiddleware())->toHaveCount(3);
         });
@@ -117,9 +117,9 @@ describe('RoutesBuilder', function () {
             $router = new Router();
             $builder = new RoutesBuilder($router);
 
-            $builder->get('/public', fn() => 'public');
-            $builder->get('/private', fn() => 'private')
-                ->use(fn($req, $next) => $next($req));
+            $builder->get('/public', fn () => 'public');
+            $builder->get('/private', fn () => 'private')
+                ->use(fn ($req, $next) => $next($req));
 
             $routes = $builder->getRoutes();
             expect($routes[0]->getMiddleware())->toHaveCount(0);
@@ -130,10 +130,10 @@ describe('RoutesBuilder', function () {
             $router = new Router();
             $builder = new RoutesBuilder($router);
 
-            $builder->get('/test', fn() => 'test')
-                ->use(fn($req, $next) => $next($req)); // Route middleware
+            $builder->get('/test', fn () => 'test')
+                ->use(fn ($req, $next) => $next($req)); // Route middleware
 
-            $builder->use(fn($req, $next) => $next($req)); // Builder middleware
+            $builder->use(fn ($req, $next) => $next($req)); // Builder middleware
 
             expect($builder->getRoutes()[0]->getMiddleware())->toHaveCount(2);
         });

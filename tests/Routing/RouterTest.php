@@ -20,7 +20,7 @@ describe('Router', function () {
     describe('add()', function () {
         it('adds a route and returns it', function () {
             $router = new Router();
-            $handler = fn() => 'hello';
+            $handler = fn () => 'hello';
 
             $route = $router->add('GET', '/hello', $handler);
 
@@ -33,7 +33,7 @@ describe('Router', function () {
         it('uppercases the HTTP method', function () {
             $router = new Router();
 
-            $route = $router->add('get', '/test', fn() => 'test');
+            $route = $router->add('get', '/test', fn () => 'test');
 
             expect($route->method)->toBe('GET');
         });
@@ -41,7 +41,7 @@ describe('Router', function () {
         it('compiles path pattern for static routes', function () {
             $router = new Router();
 
-            $route = $router->add('GET', '/users', fn() => 'users');
+            $route = $router->add('GET', '/users', fn () => 'users');
 
             expect($route->pattern)->toBe('#^/users$#');
             expect($route->paramNames)->toBe([]);
@@ -50,7 +50,7 @@ describe('Router', function () {
         it('compiles path pattern with single parameter', function () {
             $router = new Router();
 
-            $route = $router->add('GET', '/users/{id}', fn() => 'user');
+            $route = $router->add('GET', '/users/{id}', fn () => 'user');
 
             expect($route->pattern)->toBe('#^/users/([^/]+)$#');
             expect($route->paramNames)->toBe(['id']);
@@ -59,7 +59,7 @@ describe('Router', function () {
         it('compiles path pattern with multiple parameters', function () {
             $router = new Router();
 
-            $route = $router->add('GET', '/posts/{postId}/comments/{commentId}', fn() => 'comment');
+            $route = $router->add('GET', '/posts/{postId}/comments/{commentId}', fn () => 'comment');
 
             expect($route->pattern)->toBe('#^/posts/([^/]+)/comments/([^/]+)$#');
             expect($route->paramNames)->toBe(['postId', 'commentId']);
@@ -85,9 +85,9 @@ describe('Router', function () {
         it('stores routes by method', function () {
             $router = new Router();
 
-            $router->add('GET', '/users', fn() => 'get');
-            $router->add('POST', '/users', fn() => 'post');
-            $router->add('GET', '/posts', fn() => 'posts');
+            $router->add('GET', '/users', fn () => 'get');
+            $router->add('POST', '/users', fn () => 'post');
+            $router->add('GET', '/posts', fn () => 'posts');
 
             $routes = $router->getRoutes();
 
@@ -101,7 +101,7 @@ describe('Router', function () {
     describe('match()', function () {
         it('matches exact path', function () {
             $router = new Router();
-            $router->add('GET', '/users', fn() => 'users');
+            $router->add('GET', '/users', fn () => 'users');
 
             $request = new Request('GET', '/users');
             $match = $router->match($request);
@@ -114,7 +114,7 @@ describe('Router', function () {
 
         it('matches path with parameter', function () {
             $router = new Router();
-            $router->add('GET', '/users/{id}', fn() => 'user');
+            $router->add('GET', '/users/{id}', fn () => 'user');
 
             $request = new Request('GET', '/users/123');
             $match = $router->match($request);
@@ -125,7 +125,7 @@ describe('Router', function () {
 
         it('matches path with multiple parameters', function () {
             $router = new Router();
-            $router->add('GET', '/posts/{postId}/comments/{commentId}', fn() => 'comment');
+            $router->add('GET', '/posts/{postId}/comments/{commentId}', fn () => 'comment');
 
             $request = new Request('GET', '/posts/42/comments/99');
             $match = $router->match($request);
@@ -136,7 +136,7 @@ describe('Router', function () {
 
         it('returns not found for unmatched path', function () {
             $router = new Router();
-            $router->add('GET', '/users', fn() => 'users');
+            $router->add('GET', '/users', fn () => 'users');
 
             $request = new Request('GET', '/posts');
             $match = $router->match($request);
@@ -147,7 +147,7 @@ describe('Router', function () {
 
         it('returns not found for unmatched method', function () {
             $router = new Router();
-            $router->add('GET', '/users', fn() => 'users');
+            $router->add('GET', '/users', fn () => 'users');
 
             $request = new Request('POST', '/users');
             $match = $router->match($request);
@@ -157,7 +157,7 @@ describe('Router', function () {
 
         it('normalizes path with trailing slash', function () {
             $router = new Router();
-            $router->add('GET', '/users', fn() => 'users');
+            $router->add('GET', '/users', fn () => 'users');
 
             $request = new Request('GET', '/users/');
             $match = $router->match($request);
@@ -167,7 +167,7 @@ describe('Router', function () {
 
         it('normalizes path without leading slash', function () {
             $router = new Router();
-            $router->add('GET', '/users', fn() => 'users');
+            $router->add('GET', '/users', fn () => 'users');
 
             $request = new Request('GET', 'users');
             $match = $router->match($request);
@@ -177,7 +177,7 @@ describe('Router', function () {
 
         it('matches root path', function () {
             $router = new Router();
-            $router->add('GET', '/', fn() => 'home');
+            $router->add('GET', '/', fn () => 'home');
 
             $request = new Request('GET', '/');
             $match = $router->match($request);
@@ -187,8 +187,8 @@ describe('Router', function () {
 
         it('matches first registered route', function () {
             $router = new Router();
-            $router->add('GET', '/users/{id}', fn() => 'first');
-            $router->add('GET', '/users/{userId}', fn() => 'second');
+            $router->add('GET', '/users/{id}', fn () => 'first');
+            $router->add('GET', '/users/{userId}', fn () => 'second');
 
             $request = new Request('GET', '/users/123');
             $match = $router->match($request);
@@ -200,8 +200,8 @@ describe('Router', function () {
 
         it('matches different HTTP methods independently', function () {
             $router = new Router();
-            $router->add('GET', '/users', fn() => 'list');
-            $router->add('POST', '/users', fn() => 'create');
+            $router->add('GET', '/users', fn () => 'list');
+            $router->add('POST', '/users', fn () => 'create');
 
             $getRequest = new Request('GET', '/users');
             $postRequest = new Request('POST', '/users');
@@ -216,7 +216,7 @@ describe('Router', function () {
 
         it('matches complex nested paths', function () {
             $router = new Router();
-            $router->add('GET', '/api/v1/users/{userId}/posts/{postId}/comments', fn() => 'comments');
+            $router->add('GET', '/api/v1/users/{userId}/posts/{postId}/comments', fn () => 'comments');
 
             $request = new Request('GET', '/api/v1/users/john/posts/hello-world/comments');
             $match = $router->match($request);
@@ -235,9 +235,9 @@ describe('Router', function () {
 
         it('returns routes grouped by method', function () {
             $router = new Router();
-            $router->add('GET', '/a', fn() => 'a');
-            $router->add('GET', '/b', fn() => 'b');
-            $router->add('POST', '/c', fn() => 'c');
+            $router->add('GET', '/a', fn () => 'a');
+            $router->add('GET', '/b', fn () => 'b');
+            $router->add('POST', '/c', fn () => 'c');
 
             $routes = $router->getRoutes();
 

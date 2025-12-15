@@ -12,7 +12,7 @@ interface RouterInterface
      * @param callable|array<mixed>|string $handler
      */
     public function add(string $method, string $path, callable|array|string $handler): Route;
-    
+
     /**
      * @param callable|array<mixed>|string $handler
      */

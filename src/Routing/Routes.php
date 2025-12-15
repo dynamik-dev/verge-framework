@@ -77,7 +77,7 @@ class Routes
     /**
      * Convert all routes to array format.
      *
-     * @return array[]
+     * @return array<int, array<string, mixed>>
      */
     public function toArray(): array
     {
@@ -133,7 +133,7 @@ class Routes
 
         while (preg_match('/\{([a-zA-Z_][a-zA-Z0-9_]*)(\?)?(?::)?/', $path, $match, PREG_OFFSET_CAPTURE, $offset)) {
             $paramName = $match[1][0];
-            $isOptional = isset($match[2][0]) && $match[2][0] === '?';
+            $isOptional = isset($match[2][0]);
             $matchStart = $match[0][1];
 
             // Find the closing brace, accounting for nested braces in constraint
@@ -190,7 +190,11 @@ class Routes
     /**
      * Extract handler information.
      *
-     * @return array{type: string, class?: string, method?: string}
+     * @return array{type: 'closure'}
+     *       | array{type: 'controller', class: string, method: string}
+     *       | array{type: 'invokable', class: string}
+     *       | array{type: 'function', name: string}
+     *       | array{type: 'unknown'}
      */
     protected function extractHandler(Route $route): array
     {
@@ -202,11 +206,16 @@ class Routes
         }
 
         // [Controller::class, 'method']
-        if (is_array($handler) && count($handler) === 2) {
+        if (is_array($handler) && count($handler) === 2 && isset($handler[0]) && isset($handler[1])) {
+            /** @var string $class */
+            $class = $handler[0];
+            /** @var string $method */
+            $method = $handler[1];
+            
             return [
                 'type' => 'controller',
-                'class' => $handler[0],
-                'method' => $handler[1],
+                'class' => $class,
+                'method' => $method,
             ];
         }
 

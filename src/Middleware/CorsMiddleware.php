@@ -24,6 +24,9 @@ class CorsMiddleware
         return $response;
     }
 
+    /**
+     * @return array<string, string>
+     */
     private function corsHeaders(): array
     {
         return [

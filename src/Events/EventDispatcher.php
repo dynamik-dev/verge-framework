@@ -29,6 +29,7 @@ class EventDispatcher
 
     /**
      * Emit an event to all registered listeners.
+     * @param array<string, mixed> $payload
      */
     public function emit(string $event, array $payload = []): void
     {
@@ -84,6 +85,9 @@ class EventDispatcher
         return $this->listeners[$event] ?? [];
     }
 
+    /**
+     * @param array<string, mixed> $payload
+     */
     protected function call(callable|string $listener, string $event, array $payload): void
     {
         // Resolve class string through container
@@ -92,7 +96,9 @@ class EventDispatcher
         }
 
         // Call listener with event name and payload
-        $listener($event, $payload);
+        if (is_callable($listener)) {
+            $listener($event, $payload);
+        }
     }
 
     protected function matchesWildcard(string $pattern, string $event): bool

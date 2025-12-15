@@ -8,7 +8,15 @@ use Psr\Http\Message\RequestInterface;
 
 interface RouterInterface
 {
+    /**
+     * @param callable|array<mixed>|string $handler
+     */
     public function add(string $method, string $path, callable|array|string $handler): Route;
+    
+    /**
+     * @param callable|array<mixed>|string $handler
+     */
+    public function any(string $path, callable|array|string $handler): Route;
 
     public function match(RequestInterface $request): RouteMatch;
 
@@ -16,6 +24,9 @@ interface RouterInterface
 
     public function getNamedRoute(string $name): ?Route;
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public function url(string $name, array $params = []): string;
 
     /**

@@ -14,40 +14,62 @@ class Router implements RouterInterface
     /** @var array<string, Route> */
     protected array $namedRoutes = [];
 
+    /**
+     * @param callable|array<mixed>|string $handler
+     */
     public function get(string $path, callable|array|string $handler): Route
     {
         return $this->add('GET', $path, $handler);
     }
 
+    /**
+     * @param callable|array<mixed>|string $handler
+     */
     public function post(string $path, callable|array|string $handler): Route
     {
         return $this->add('POST', $path, $handler);
     }
 
+    /**
+     * @param callable|array<mixed>|string $handler
+     */
     public function put(string $path, callable|array|string $handler): Route
     {
         return $this->add('PUT', $path, $handler);
     }
 
+    /**
+     * @param callable|array<mixed>|string $handler
+     */
     public function patch(string $path, callable|array|string $handler): Route
     {
         return $this->add('PATCH', $path, $handler);
     }
 
+    /**
+     * @param callable|array<mixed>|string $handler
+     */
     public function delete(string $path, callable|array|string $handler): Route
     {
         return $this->add('DELETE', $path, $handler);
     }
 
+    /**
+     * @param callable|array<mixed>|string $handler
+     */
     public function any(string $path, callable|array|string $handler): Route
     {
         $route = null;
         foreach (['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as $method) {
             $route = $this->add($method, $path, $handler);
         }
+        /** @var Route $route */
         return $route;
     }
 
+    /**
+     * @param callable|array<mixed>|string $handler
+     */
     public function add(string $method, string $path, callable|array|string $handler): Route
     {
         $method = strtoupper($method);
@@ -100,7 +122,8 @@ class Router implements RouterInterface
         while (preg_match('/\{([a-zA-Z_][a-zA-Z0-9_]*)(\?)?(?::)?/', $pattern, $match, PREG_OFFSET_CAPTURE, $offset)) {
             $fullMatchStart = $match[0][1];
             $paramName = $match[1][0];
-            $isOptional = isset($match[2][0]) && $match[2][0] === '?';
+            // Check if the parameter part contains a '?'
+            $isOptional = isset($match[2][0]);
 
             // Find the closing brace, accounting for nested braces in constraint
             $braceDepth = 1;
@@ -166,6 +189,9 @@ class Router implements RouterInterface
         return $this->namedRoutes[$name] ?? null;
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public function url(string $name, array $params = []): string
     {
         $route = $this->namedRoutes[$name] ?? null;
@@ -182,7 +208,8 @@ class Router implements RouterInterface
             if (isset($params[$paramName])) {
                 // Find the parameter in the path
                 $pattern = '/\{' . preg_quote($paramName, '/') . '\??(?::[^{}]*(?:\{[^{}]*\}[^{}]*)*)?\}/';
-                $path = preg_replace($pattern, (string) $params[$paramName], $path);
+                /** @phpstan-ignore-next-line */
+                $path = (string) preg_replace($pattern, (string) $params[$paramName], $path);
                 $usedParams[] = $paramName;
             }
         }
@@ -192,7 +219,7 @@ class Router implements RouterInterface
         $path = $this->removeOptionalParams($path);
 
         // Clean up any double slashes from removed optional params
-        $path = preg_replace('#/+#', '/', $path);
+        $path = (string) preg_replace('#/+#', '/', $path);
         $path = rtrim($path, '/') ?: '/';
 
         // Remaining params become query string

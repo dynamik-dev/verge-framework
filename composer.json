@@ -30,7 +30,12 @@
         "psr/http-server-middleware": "^1.0"
     },
     "require-dev": {
-        "pestphp/pest": "^2.0"
+        "pestphp/pest": "^2.0",
+        "phpstan/phpstan": "^2.1"
+    },
+    "scripts": {
+        "test": "pest --parallel",
+        "phpstan": "phpstan analyse"
     },
     "config": {
         "allow-plugins": {

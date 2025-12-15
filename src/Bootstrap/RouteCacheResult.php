@@ -11,8 +11,8 @@ class RouteCacheResult
 {
     /**
      * @param int $cached Number of routes successfully cached
-     * @param array $skipped Routes that were skipped with reasons
-     * @param array $handlers Handler class names for container caching
+     * @param array<int, array<string, string>> $skipped Routes that were skipped with reasons
+     * @param array<int, string> $handlers Handler class names for container caching
      */
     public function __construct(
         public readonly int $cached,
@@ -30,6 +30,7 @@ class RouteCacheResult
 
     /**
      * Get formatted warnings for skipped routes.
+     * @return array<int, string>
      */
     public function getWarnings(): array
     {

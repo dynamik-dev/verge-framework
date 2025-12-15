@@ -18,13 +18,13 @@ use Verge\Routing\RouterInterface;
  */
 class CachedRouter implements RouterInterface
 {
-    /** @var array<string, array<string, array>> */
+    /** @var array<string, array<string, array<string, mixed>>> */
     private array $static = [];
 
-    /** @var array<string, array<int, array[]>> */
+    /** @var array<string, array<int, array<int, array<string, mixed>>>> */
     private array $dynamic = [];
 
-    /** @var array<string, array> */
+    /** @var array<string, array<string, mixed>> */
     private array $named = [];
 
     /** @var array<string, Route[]> Reconstructed Route objects for getRoutes() */
@@ -33,11 +33,22 @@ class CachedRouter implements RouterInterface
     /** @var array<string, Route> */
     private array $namedRoutes = [];
 
+    /**
+     * @param array<string, mixed> $cacheData
+     */
     public function __construct(array $cacheData)
     {
-        $this->static = $cacheData['static'] ?? [];
-        $this->dynamic = $cacheData['dynamic'] ?? [];
-        $this->named = $cacheData['named'] ?? [];
+        /** @var array<string, array<string, array<string, mixed>>> */
+        $static = $cacheData['static'] ?? [];
+        $this->static = $static;
+
+        /** @var array<string, array<int, array<int, array<string, mixed>>>> */
+        $dynamic = $cacheData['dynamic'] ?? [];
+        $this->dynamic = $dynamic;
+
+        /** @var array<string, array<string, mixed>> */
+        $named = $cacheData['named'] ?? [];
+        $this->named = $named;
 
         $this->buildRouteObjects();
     }
@@ -59,9 +70,16 @@ class CachedRouter implements RouterInterface
         $dynamicRoutes = $this->dynamic[$method][$segmentCount] ?? [];
 
         foreach ($dynamicRoutes as $routeData) {
-            if (preg_match($routeData['pattern'], $path, $matches)) {
-                $params = $this->extractParams($routeData['paramNames'], $matches);
-                $route = $this->createRoute($method, $routeData['path'], $routeData);
+            /** @var string $pattern */
+            $pattern = $routeData['pattern'];
+            /** @var array<int, string> $paramNames */
+            $paramNames = $routeData['paramNames'];
+            /** @var string $routePath */
+            $routePath = $routeData['path'];
+
+            if (preg_match($pattern, $path, $matches)) {
+                $params = $this->extractParams($paramNames, $matches);
+                $route = $this->createRoute($method, $routePath, $routeData);
                 return RouteMatch::found($route, $params);
             }
         }
@@ -72,9 +90,16 @@ class CachedRouter implements RouterInterface
                 continue; // Already checked
             }
             foreach ($routes as $routeData) {
-                if (preg_match($routeData['pattern'], $path, $matches)) {
-                    $params = $this->extractParams($routeData['paramNames'], $matches);
-                    $route = $this->createRoute($method, $routeData['path'], $routeData);
+                /** @var string $pattern */
+                $pattern = $routeData['pattern'];
+                /** @var array<int, string> $paramNames */
+                $paramNames = $routeData['paramNames'];
+                /** @var string $routePath */
+                $routePath = $routeData['path'];
+
+                if (preg_match($pattern, $path, $matches)) {
+                    $params = $this->extractParams($paramNames, $matches);
+                    $route = $this->createRoute($method, $routePath, $routeData);
                     return RouteMatch::found($route, $params);
                 }
             }
@@ -84,6 +109,14 @@ class CachedRouter implements RouterInterface
     }
 
     public function add(string $method, string $path, callable|array|string $handler): Route
+    {
+        throw new \RuntimeException(
+            'Cannot add routes to a cached router. ' .
+            'Clear the route cache to add new routes.'
+        );
+    }
+
+    public function any(string $path, callable|array|string $handler): Route
     {
         throw new \RuntimeException(
             'Cannot add routes to a cached router. ' .
@@ -112,15 +145,22 @@ class CachedRouter implements RouterInterface
             throw new RouteNotFoundException("Route '{$name}' not found");
         }
 
+        /** @var string $path */
         $path = $routeInfo['path'];
         $usedParams = [];
+        /** @var array<int, string> $paramNames */
+        $paramNames = $routeInfo['paramNames'];
 
         // Substitute path parameters
-        foreach ($routeInfo['paramNames'] as $paramName) {
+        foreach ($paramNames as $paramName) {
             if (isset($params[$paramName])) {
                 // Find and replace the parameter placeholder
                 $pattern = '/\{' . preg_quote($paramName, '/') . '\??(?::[^{}]*(?:\{[^{}]*\}[^{}]*)*)?\}/';
-                $path = preg_replace($pattern, (string) $params[$paramName], $path);
+                
+                $val = $params[$paramName];
+                $strVal = is_scalar($val) || $val instanceof \Stringable ? (string) $val : '';
+                
+                $path = preg_replace($pattern, $strVal, $path) ?? $path;
                 $usedParams[] = $paramName;
             }
         }
@@ -129,8 +169,11 @@ class CachedRouter implements RouterInterface
         $path = $this->removeOptionalParams($path);
 
         // Clean up double slashes
-        $path = preg_replace('#/+#', '/', $path);
-        $path = rtrim($path, '/') ?: '/';
+        $path = preg_replace('#/+#', '/', $path) ?? $path;
+        $path = rtrim($path, '/');
+        if ($path === '') {
+            $path = '/';
+        }
 
         // Remaining params become query string
         $queryParams = array_diff_key($params, array_flip($usedParams));
@@ -166,6 +209,11 @@ class CachedRouter implements RouterInterface
         return substr_count($path, '/');
     }
 
+    /**
+     * @param array<int, string> $paramNames
+     * @param array<int, string> $matches
+     * @return array<string, string>
+     */
     private function extractParams(array $paramNames, array $matches): array
     {
         $params = [];
@@ -178,23 +226,35 @@ class CachedRouter implements RouterInterface
         return $params;
     }
 
+    /**
+     * @param array<string, mixed> $routeData
+     */
     private function createRoute(string $method, string $path, array $routeData): Route
     {
+        /** @var callable|array{0: class-string, 1: string}|class-string $handler */
+        $handler = $routeData['handler'];
+        /** @var string|null $pattern */
+        $pattern = $routeData['pattern'] ?? null;
+        /** @var array<int, string> $paramNames */
+        $paramNames = $routeData['paramNames'] ?? [];
+
         $route = new Route(
             $method,
             $path,
-            $routeData['handler'],
-            $routeData['pattern'] ?? '#^' . preg_quote($path, '#') . '$#',
-            $routeData['paramNames'] ?? []
+            $handler,
+            $pattern ?? '#^' . preg_quote($path, '#') . '$#',
+            $paramNames
         );
 
         // Apply middleware
-        foreach ($routeData['middleware'] ?? [] as $middleware) {
+        /** @var array<int, string> $middlewareList */
+        $middlewareList = $routeData['middleware'] ?? [];
+        foreach ($middlewareList as $middleware) {
             $route->use($middleware);
         }
 
         // Set name if present
-        if (!empty($routeData['name'])) {
+        if (!empty($routeData['name']) && is_string($routeData['name'])) {
             $route->name($routeData['name']);
         }
 
@@ -212,7 +272,7 @@ class CachedRouter implements RouterInterface
                 $route = $this->createRoute($method, $path, $routeData);
                 $this->routes[$method][] = $route;
 
-                if ($routeData['name'] ?? null) {
+                if (isset($routeData['name']) && is_string($routeData['name'])) {
                     $this->namedRoutes[$routeData['name']] = $route;
                 }
             }
@@ -225,10 +285,12 @@ class CachedRouter implements RouterInterface
             }
             foreach ($segmentGroups as $routes) {
                 foreach ($routes as $routeData) {
-                    $route = $this->createRoute($method, $routeData['path'], $routeData);
+                    /** @var string $routePath */
+                    $routePath = $routeData['path'];
+                    $route = $this->createRoute($method, $routePath, $routeData);
                     $this->routes[$method][] = $route;
 
-                    if ($routeData['name'] ?? null) {
+                    if (isset($routeData['name']) && is_string($routeData['name'])) {
                         $this->namedRoutes[$routeData['name']] = $route;
                     }
                 }

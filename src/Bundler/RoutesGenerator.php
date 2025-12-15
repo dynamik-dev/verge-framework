@@ -82,7 +82,7 @@ class RoutesGenerator
             return "'__UNCONVERTED_CLOSURE__'";
         }
 
-        if (is_array($handler)) {
+        if (is_array($handler) && isset($handler[0], $handler[1]) && is_string($handler[0])) {
             // [Controller::class, 'method']
             return "[\\{$handler[0]}::class, '{$handler[1]}']";
         }
@@ -95,11 +95,13 @@ class RoutesGenerator
             return "'{$handler}'";
         }
 
-        return "'{$handler}'";
+        $strHandler = is_scalar($handler) || $handler instanceof \Stringable ? (string) $handler : '';
+        return "'" . $strHandler . "'";
     }
 
     /**
      * Format middleware array for output.
+     * @param array<mixed> $middleware
      */
     private function formatMiddleware(array $middleware): string
     {
@@ -112,7 +114,7 @@ class RoutesGenerator
                 } else {
                     $items[] = "'{$m}'";
                 }
-            } elseif (is_array($m)) {
+            } elseif (is_array($m) && isset($m[0], $m[1]) && is_string($m[0])) {
                 $items[] = "[\\{$m[0]}::class, '{$m[1]}']";
             }
         }

@@ -45,8 +45,9 @@ class App
         } elseif ($container instanceof Container) {
             $this->container = $container;
         } else {
-            // External PSR-11 container - use as-is
-            $this->container = $container;
+            // External PSR-11 container - must be wrapped or incompatible if we rely on Container methods
+            // For now, if it's not our Container, we can't assign it to public Container $container.
+            throw new \InvalidArgumentException('App requires instance of Verge\Container');
         }
 
         // Make App resolvable from container
@@ -69,9 +70,12 @@ class App
         $this->singleton(Cache\CacheInterface::class, fn() => $this->driver('cache'));
 
         // Log drivers
+        $logPath = $this->env('LOG_PATH', 'php://stderr');
+        $logLevel = $this->env('LOG_LEVEL', 'debug');
+
         $this->driver('log', 'stream', fn() => new Log\Drivers\StreamLogDriver(
-            $this->env('LOG_PATH', 'php://stderr'),
-            Log\LogLevel::from($this->env('LOG_LEVEL', 'debug'))
+            is_scalar($logPath) ? (string)$logPath : 'php://stderr',
+            Log\LogLevel::from(is_scalar($logLevel) ? (string)$logLevel : 'debug')
         ));
         $this->driver('log', 'array', fn() => new Log\Drivers\ArrayLogDriver());
         $this->defaultDriver('log', 'stream');
@@ -82,17 +86,38 @@ class App
 
     protected function router(): RouterInterface
     {
-        return $this->router ??= $this->container->resolve(RouterInterface::class);
+        if ($this->router !== null) {
+            return $this->router;
+        }
+        $router = $this->container->resolve(RouterInterface::class);
+        if (!$router instanceof RouterInterface) {
+             throw new \RuntimeException('Resolved service is not a RouterInterface');
+        }
+        return $this->router = $router;
     }
 
     protected function getEnv(): Env
     {
-        return $this->env ??= $this->container->resolve(Env::class);
+        if ($this->env !== null) {
+            return $this->env;
+        }
+        $env = $this->container->resolve(Env::class);
+        if (!$env instanceof Env) {
+             throw new \RuntimeException('Resolved service is not an Env');
+        }
+        return $this->env = $env;
     }
 
     protected function events(): EventDispatcher
     {
-        return $this->events ??= $this->container->resolve(EventDispatcher::class);
+        if ($this->events !== null) {
+             return $this->events;
+        }
+        $events = $this->container->resolve(EventDispatcher::class);
+        if (!$events instanceof EventDispatcher) {
+             throw new \RuntimeException('Resolved service is not an EventDispatcher');
+        }
+        return $this->events = $events;
     }
 
     /**
@@ -131,6 +156,7 @@ class App
 
     /**
      * Emit an event to all registered listeners.
+     * @param array<mixed> $payload
      */
     public function emit(string $event, array $payload = []): static
     {
@@ -148,42 +174,70 @@ class App
 
     // Routing methods (forwarded to router)
 
+    /**
+     * @param array<int, string> $middleware
+     * @param callable|array<mixed>|string $handler
+     */
     public function get(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): static
     {
         $this->addRoute('GET', $path, $handler, $middleware, $name);
         return $this;
     }
 
+    /**
+     * @param array<int, string> $middleware
+     * @param callable|array<mixed>|string $handler
+     */
     public function post(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): static
     {
         $this->addRoute('POST', $path, $handler, $middleware, $name);
         return $this;
     }
 
+    /**
+     * @param array<int, string> $middleware
+     * @param callable|array<mixed>|string $handler
+     */
     public function put(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): static
     {
         $this->addRoute('PUT', $path, $handler, $middleware, $name);
         return $this;
     }
 
+    /**
+     * @param array<int, string> $middleware
+     * @param callable|array<mixed>|string $handler
+     */
     public function patch(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): static
     {
         $this->addRoute('PATCH', $path, $handler, $middleware, $name);
         return $this;
     }
 
+    /**
+     * @param array<int, string> $middleware
+     * @param callable|array<mixed>|string $handler
+     */
     public function delete(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): static
     {
         $this->addRoute('DELETE', $path, $handler, $middleware, $name);
         return $this;
     }
 
+    /**
+     * @param array<int, string> $middleware
+     * @param callable|array<mixed>|string $handler
+     */
     public function any(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): static
     {
         $this->addRoute('ANY', $path, $handler, $middleware, $name);
         return $this;
     }
 
+    /**
+     * @param array<int, string> $middleware
+     * @param callable|array<mixed>|string $handler
+     */
     protected function addRoute(string $method, string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): Route
     {
         $fullPath = $this->currentPrefix . $path;
@@ -238,6 +292,9 @@ class App
         return $this;
     }
 
+    /**
+     * @param array<string, mixed> $parameters
+     */
     public function make(string $abstract, array $parameters = []): mixed
     {
         return $this->container->resolve($abstract, $parameters);
@@ -278,6 +335,8 @@ class App
         if ($name === null && $factory === null) {
             $envKey = strtoupper($service) . '_DRIVER';
             $driverName = $this->env($envKey) ?? ($this->defaultDrivers[$service] ?? null);
+            
+            $driverName = is_scalar($driverName) ? (string) $driverName : null;
 
             if ($driverName === null) {
                 throw new \RuntimeException(
@@ -320,6 +379,7 @@ class App
 
     /**
      * Generate URL for a named route.
+     * @param array<string, mixed> $params
      */
     public function url(string $name, array $params = []): string
     {
@@ -333,10 +393,14 @@ class App
         return $this->getEnv()->get($key, $default);
     }
 
+    /**
+     * @param callable(App): void|string|array<mixed> $provider
+     */
     public function configure(callable|string|array $provider): static
     {
         if (is_array($provider)) {
             foreach ($provider as $p) {
+                /** @var callable(App): void|string|array<mixed> $p */
                 $this->configure($p);
             }
             return $this;
@@ -346,6 +410,9 @@ class App
             $provider = $this->container->resolve($provider);
         }
 
+        if (!is_callable($provider)) {
+             throw new \RuntimeException('Provider must be callable');
+        }
         $provider($this);
         return $this;
     }
@@ -357,7 +424,7 @@ class App
      * When called with a callable or RouterInterface, configures routes.
      *
      * @param callable|RouterInterface|null $routes
-     * @return Routes|static
+     * @return ($routes is null ? Routes : static)
      */
     public function routes(callable|RouterInterface|null $routes = null): Routes|static
     {
@@ -414,10 +481,19 @@ class App
      */
     public function route(string $prefix, App $subApp): static
     {
-        foreach ($subApp->router()->getRoutes() as $method => $routes) {
-            foreach ($routes as $route) {
+        $routes = $subApp->router()->getRoutes();
+        foreach ($routes as $method => $methodRoutes) {
+            foreach ($methodRoutes as $route) {
+                
+                $handler = $route->handler;
+                if (!is_array($handler) && !is_string($handler) && !is_callable($handler)) {
+                    // Should theoretically not happen if Route is consistent
+                   throw new \RuntimeException('Invalid handler type in sub-app route');
+                }
+                
                 $newPath = $prefix . $route->path;
-                $newRoute = $this->router()->add($method, $newPath, $route->handler);
+                /** @var array<mixed>|callable|string $handler */
+                $newRoute = $this->router()->add($method, $newPath, $handler);
 
                 // Copy middleware from sub-app route
                 foreach ($route->getMiddleware() as $middleware) {
@@ -459,14 +535,21 @@ class App
             $match = $this->router()->match($request);
 
             if (!$match->matched) {
+                $json = json_encode(['error' => 'Not Found']);
                 return new Response(
-                    json_encode(['error' => 'Not Found']),
+                    $json !== false ? $json : '{"error": "Not Found"}',
                     404,
                     ['Content-Type' => 'application/json']
                 );
             }
 
             $route = $match->route;
+            // $match->route is guaranteed not null if matched is true based on Router logic, 
+            // but PHPStan doesn't track that dependency unless we assert.
+            if ($route === null) {
+                 // Should be unreachable given !$match->matched check above
+                 throw new \RuntimeException('Route matched but route object is null');
+            }
             $params = $match->params;
 
             // Build middleware stack
@@ -474,7 +557,7 @@ class App
 
             // Create the final handler - always returns a Response
             $handler = fn(Request $req) => $this->prepareResponse(
-                $this->executeHandler($route->handler, $params, $req)
+                $this->executeHandler($route->handler, $match->params, $req)
             );
 
             // Wrap handler with middleware
@@ -484,12 +567,21 @@ class App
                 $handler
             );
 
-            return $pipeline($request);
+            $result = $pipeline($request);
+            if (!$result instanceof Response) {
+                 // Should have been prepared by prepareResponse
+                 $content = is_scalar($result) || $result instanceof \Stringable ? (string) $result : '';
+                 return new Response($content, 200);
+            }
+            return $result;
         } finally {
             $this->container->forgetScopedInstances();
         }
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     protected function executeHandler(mixed $handler, array $params, Request $request): mixed
     {
         // Closure
@@ -500,13 +592,26 @@ class App
         // [Controller::class, 'method']
         if (is_array($handler)) {
             [$class, $method] = $handler;
-            $instance = $this->container->resolve($class);
-            return $this->container->call([$instance, $method], $params);
+             if (!is_string($class) || !is_string($method)) {
+                 throw new \RuntimeException('Invalid array handler: expected [class, method]');
+             }
+             $classStr = $class;
+             $instance = $this->container->resolve($classStr);
+             $methodStr = $method; // is_string check passed
+             
+             $callback = [$instance, $methodStr];
+             if (!is_callable($callback)) {
+                  throw new \RuntimeException("Method {$methodStr} not callable on resolved instance");
+             }
+             return $this->container->call($callback, $params);
         }
 
         // Invokable class string
         if (is_string($handler) && class_exists($handler)) {
             $instance = $this->container->resolve($handler);
+            if (!is_callable($instance)) {
+                throw new \RuntimeException("Resolved handler {$handler} is not invokable");
+            }
             return $this->container->call($instance, $params);
         }
 
@@ -518,6 +623,10 @@ class App
         // Resolve class string through container
         if (is_string($middleware)) {
             $middleware = $this->container->resolve($middleware);
+        }
+
+        if (!is_callable($middleware)) {
+             throw new \RuntimeException('Middleware must be callable');
         }
 
         return $middleware($request, $next);
@@ -537,8 +646,12 @@ class App
 
         // Array -> JSON
         if (is_array($result)) {
+            $json = json_encode($result);
+            if ($json === false) {
+                throw new \RuntimeException('Failed to encode response to JSON: ' . json_last_error_msg());
+            }
             return new Response(
-                json_encode($result),
+                $json,
                 200,
                 ['Content-Type' => 'application/json']
             );
@@ -550,7 +663,8 @@ class App
         }
 
         // Stringable object
-        if (is_object($result) && method_exists($result, '__toString')) {
+        // PHPStan strictly wants strict Stringable check before cast
+        if ($result instanceof \Stringable || (is_object($result) && method_exists($result, '__toString'))) {
             return new Response((string) $result, 200, ['Content-Type' => 'text/plain']);
         }
 

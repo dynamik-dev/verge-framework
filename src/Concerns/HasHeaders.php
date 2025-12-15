@@ -6,6 +6,10 @@ namespace Verge\Concerns;
 
 trait HasHeaders
 {
+    /**
+     * @param array<string, string|string[]> $headers
+     * @return array<string, string[]>
+     */
     protected function normalizeHeaders(array $headers): array
     {
         $normalized = [];
@@ -15,6 +19,9 @@ trait HasHeaders
         return $normalized;
     }
 
+    /**
+     * @return array<string, string[]>
+     */
     public function getHeaders(): array
     {
         return $this->headers;
@@ -25,6 +32,9 @@ trait HasHeaders
         return isset($this->headers[strtolower($name)]);
     }
 
+    /**
+     * @return string[]
+     */
     public function getHeader(string $name): array
     {
         return $this->headers[strtolower($name)] ?? [];
@@ -35,6 +45,9 @@ trait HasHeaders
         return implode(', ', $this->getHeader($name));
     }
 
+    /**
+     * @param string|string[] $value
+     */
     public function withHeader(string $name, $value): static
     {
         $clone = clone $this;
@@ -42,6 +55,9 @@ trait HasHeaders
         return $clone;
     }
 
+    /**
+     * @param string|string[] $value
+     */
     public function withAddedHeader(string $name, $value): static
     {
         $clone = clone $this;

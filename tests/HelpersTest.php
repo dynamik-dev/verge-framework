@@ -155,6 +155,7 @@ describe('Helper Functions', function () {
             ]);
 
             $decoded = json_decode($response->body(), true);
+            assert(is_array($decoded));
 
             expect($decoded['user']['name'])->toBe('John');
             expect($decoded['user']['roles'])->toBe(['admin', 'user']);

@@ -243,10 +243,14 @@ describe('RouteInfo', function () {
             $app->get('/users', [TestRoutesController::class, 'index']);
 
             $route = $app->routes()->all()[0];
+            $handler = $route->handler;
 
-            expect($route->handler['type'])->toBe('controller');
-            expect($route->handler['class'])->toBe(TestRoutesController::class);
-            expect($route->handler['method'])->toBe('index');
+            expect($handler['type'])->toBe('controller');
+            if ($handler['type'] === 'controller') {
+                /** @var array{type: 'controller', class: string, method: string} $handler */
+                expect($handler['class'])->toBe(TestRoutesController::class);
+                expect($handler['method'])->toBe('index');
+            }
         });
 
         it('identifies invokable handlers', function () {
@@ -254,9 +258,13 @@ describe('RouteInfo', function () {
             $app->get('/invoke', TestInvokableHandler::class);
 
             $route = $app->routes()->all()[0];
+            $handler = $route->handler;
 
-            expect($route->handler['type'])->toBe('invokable');
-            expect($route->handler['class'])->toBe(TestInvokableHandler::class);
+            expect($handler['type'])->toBe('invokable');
+            if ($handler['type'] === 'invokable') {
+                /** @var array{type: 'invokable', class: string} $handler */
+                expect($handler['class'])->toBe(TestInvokableHandler::class);
+            }
         });
     });
 

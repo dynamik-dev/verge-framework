@@ -33,6 +33,7 @@ class WarmResult
 
     /**
      * Get all warnings from the warming operation.
+     * @return array<int, string>
      */
     public function getWarnings(): array
     {

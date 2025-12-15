@@ -11,7 +11,7 @@ class ContainerCacheResult
 {
     /**
      * @param int $cached Number of classes successfully cached
-     * @param array $failed Classes that failed to cache with reasons
+     * @param array<int, array<string, string>> $failed Classes that failed to cache with reasons
      */
     public function __construct(
         public readonly int $cached,
@@ -28,6 +28,7 @@ class ContainerCacheResult
 
     /**
      * Get formatted warnings for failed classes.
+     * @return array<int, string>
      */
     public function getWarnings(): array
     {

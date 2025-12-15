@@ -17,6 +17,7 @@ class Route
         public readonly string $path,
         public readonly mixed $handler,
         public readonly string $pattern,
+        /** @var string[] */
         public readonly array $paramNames = []
     ) {}
 
@@ -31,6 +32,9 @@ class Route
         return $this->name;
     }
 
+    /**
+     * @return array<string, string>|null
+     */
     public function matches(string $path): ?array
     {
         if (preg_match($this->pattern, $path, $matches)) {

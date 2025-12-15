@@ -130,6 +130,8 @@ describe('StreamLogDriver', function () {
 
     it('writes to stream', function () {
         $stream = fopen('php://memory', 'r+');
+        assert(is_resource($stream));
+
         $driver = new StreamLogDriver($stream);
 
         $driver->info('Test message');
@@ -143,6 +145,8 @@ describe('StreamLogDriver', function () {
 
     it('interpolates context placeholders', function () {
         $stream = fopen('php://memory', 'r+');
+        assert(is_resource($stream));
+
         $driver = new StreamLogDriver($stream);
 
         $driver->info('User {name} logged in', ['name' => 'John']);
@@ -155,6 +159,8 @@ describe('StreamLogDriver', function () {
 
     it('respects minimum log level', function () {
         $stream = fopen('php://memory', 'r+');
+        assert(is_resource($stream));
+
         $driver = new StreamLogDriver($stream, LogLevel::WARNING);
 
         $driver->debug('Debug message');

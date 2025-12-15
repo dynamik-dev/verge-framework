@@ -9,7 +9,7 @@ class RouteInfo
     /**
      * @param array<int, array{name: string, required: bool, constraint: ?string}> $params
      * @param array<int, string> $middleware
-     * @param array{type: string, class?: string, method?: string} $handler
+     * @param array{type: 'closure'}|array{type: 'controller', class: string, method: string}|array{type: 'invokable', class: string}|array{type: 'function', name: string}|array{type: 'unknown'} $handler
      */
     public function __construct(
         public readonly string $method,
@@ -21,7 +21,18 @@ class RouteInfo
     ) {}
 
     /**
-     * @return array{method: string, path: string, name: ?string, params: array, middleware: array, handler: array}
+     * @return array{
+     *     method: string,
+     *     path: string,
+     *     name: ?string,
+     *     params: array<int, array{name: string, required: bool, constraint: ?string}>,
+     *     middleware: array<int, string>,
+     *     handler: array{type: 'closure'}
+     *            | array{type: 'controller', class: string, method: string}
+     *            | array{type: 'invokable', class: string}
+     *            | array{type: 'function', name: string}
+     *            | array{type: 'unknown'}
+     * }
      */
     public function toArray(): array
     {

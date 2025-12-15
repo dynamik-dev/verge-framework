@@ -19,7 +19,7 @@ class ContainerCache
     /**
      * Warm the container cache with reflection data for given classes.
      *
-     * @param array $classes Class names to cache
+     * @param array<int, string> $classes Class names to cache
      */
     public function warm(array $classes): ContainerCacheResult
     {
@@ -50,6 +50,7 @@ class ContainerCache
 
     /**
      * Load cached reflection data.
+     * @return array<string, array{instantiable: bool, constructor: ?array<int, array{name: string, type: ?string, builtin: bool, hasDefault: bool, default: mixed}>}>
      */
     public function load(): array
     {
@@ -57,7 +58,9 @@ class ContainerCache
             throw new \RuntimeException("Container cache not found at: {$this->cachePath}");
         }
 
-        return require $this->cachePath;
+        /** @var array<string, array{instantiable: bool, constructor: ?array<int, array{name: string, type: ?string, builtin: bool, hasDefault: bool, default: mixed}>}> */
+        $data = require $this->cachePath;
+        return $data;
     }
 
     /**
@@ -89,6 +92,9 @@ class ContainerCache
 
     /**
      * Discover all dependencies recursively.
+     * @param array<int, string> $classes
+     * @param array<string, bool> $discovered
+     * @return array<int, string>
      */
     private function discoverDependencies(array $classes, array &$discovered = []): array
     {
@@ -128,9 +134,14 @@ class ContainerCache
 
     /**
      * Reflect a class and extract cacheable metadata.
+     * @param string $class
+     * @return array{instantiable: bool, constructor: ?array<int, array{name: string, type: string|null, builtin: bool, hasDefault: bool, default: mixed}>}
      */
     private function reflectClass(string $class): array
     {
+        if (!class_exists($class)) {
+             throw new \ReflectionException("Class {$class} does not exist");
+        }
         $reflector = new ReflectionClass($class);
 
         $data = [
@@ -174,6 +185,7 @@ class ContainerCache
             }
         }
 
+        /** @var array{instantiable: bool, constructor: ?array<int, array{name: string, type: string|null, builtin: bool, hasDefault: bool, default: mixed}>} $data */
         return $data;
     }
 
@@ -204,6 +216,7 @@ class ContainerCache
 
     /**
      * Write the cache file.
+     * @param array<string, mixed> $cacheData
      */
     private function writeCacheFile(array $cacheData): void
     {

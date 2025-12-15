@@ -107,6 +107,7 @@ describe('Router', function () {
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
+            assert($match->route !== null);
             expect($match->route->path)->toBe('/users');
             expect($match->params)->toBe([]);
         });
@@ -193,6 +194,7 @@ describe('Router', function () {
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
+            assert($match->route !== null);
             expect($match->route->path)->toBe('/users/{id}');
         });
 

@@ -126,14 +126,17 @@ describe('Verge', function () {
             expect($builder)->toBeInstanceOf(\Verge\Routing\RoutesBuilder::class);
         });
 
-        it('adds routes to the app router', function () {
+            it('adds routes to the app router', function () {
             Verge::buildDefaults();
 
             Verge::routes(function ($r) {
                 $r->get('/hello', fn() => 'world');
             });
 
-            $response = Verge::app()->test()->get('/hello');
+            $app = Verge::app();
+            assert($app instanceof App);
+
+            $response = $app->test()->get('/hello');
             expect($response->body())->toBe('world');
         });
 
@@ -144,7 +147,10 @@ describe('Verge', function () {
                 $r->get('/with-header', fn() => 'ok');
             })->use(fn($req, $next) => $next($req)->header('X-Group', 'applied'));
 
-            $response = Verge::app()->test()->get('/with-header');
+            $app = Verge::app();
+            assert($app instanceof App);
+
+            $response = $app->test()->get('/with-header');
             expect($response->getHeaderLine('X-Group'))->toBe('applied');
         });
 
@@ -159,8 +165,11 @@ describe('Verge', function () {
                 $r->get('/two', fn() => 'two');
             });
 
-            expect(Verge::app()->test()->get('/one')->body())->toBe('one');
-            expect(Verge::app()->test()->get('/two')->body())->toBe('two');
+            $app = Verge::app();
+            assert($app instanceof App);
+
+            expect($app->test()->get('/one')->body())->toBe('one');
+            expect($app->test()->get('/two')->body())->toBe('two');
         });
 
         it('throws when no app exists', function () {

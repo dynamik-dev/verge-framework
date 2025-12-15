@@ -116,8 +116,9 @@ class Cache
      */
     public function increment(string $key, int $value = 1): int
     {
-        $current = (int) $this->get($key, 0);
-        $new = $current + $value;
+        $current = $this->get($key, 0);
+        $currentInt = is_numeric($current) ? (int) $current : 0;
+        $new = $currentInt + $value;
         $this->driver->set($key, $new);
         return $new;
     }

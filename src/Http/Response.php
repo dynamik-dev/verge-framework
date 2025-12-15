@@ -13,6 +13,7 @@ class Response implements ResponseInterface
     use HasHeaders;
     protected string $body;
     protected int $status;
+    /** @var array<string, string[]> */
     protected array $headers;
     protected string $reasonPhrase = '';
     protected string $protocolVersion = '1.1';
@@ -43,6 +44,9 @@ class Response implements ResponseInterface
         503 => 'Service Unavailable',
     ];
 
+    /**
+     * @param array<string, string|string[]> $headers
+     */
     public function __construct(
         string $body = '',
         int $status = 200,
@@ -73,9 +77,13 @@ class Response implements ResponseInterface
         return $this->body;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function json(): array
     {
-        return json_decode($this->body, true) ?? [];
+        $decoded = json_decode($this->body, true);
+        return is_array($decoded) ? $decoded : [];
     }
 
     // PSR-7 ResponseInterface methods

@@ -46,8 +46,9 @@ class BootstrapCache
         ?bool $enabled = null
     ) {
         // Default path: check env, then use cwd/bootstrap/cache
+        $envPath = $_ENV['VERGE_CACHE_PATH'] ?? null;
         $this->path = $path
-            ?? ($_ENV['VERGE_CACHE_PATH'] ?? null)
+            ?? (is_string($envPath) ? $envPath : null)
             ?? getcwd() . '/bootstrap/cache';
 
         // Default enabled: production only (check common env patterns)
@@ -93,7 +94,7 @@ class BootstrapCache
         }
 
         // If container metadata is cached, inject into container
-        if ($this->containerCache->isCached() && $app->container instanceof \Verge\Container) {
+        if ($this->containerCache->isCached()) {
             $app->container->setReflectionCache($this->containerCache->load());
         }
     }
@@ -115,7 +116,12 @@ class BootstrapCache
         $routeCache = $this->routeCache ?? new RouteCache($this->getRouteCachePath());
 
         // Get current router (should be the original, not cached)
-        $router = $this->app->container->resolve(RouterInterface::class);
+        /** @var App $app */
+        $app = $this->app;
+        $router = $app->container->resolve(RouterInterface::class);
+        if (!$router instanceof RouterInterface) {
+            throw new \RuntimeException('Resolved service does not implement RouterInterface');
+        }
 
         // If using CachedRouter, we can't re-cache - need original routes
         if ($router instanceof CachedRouter) {
@@ -160,6 +166,7 @@ class BootstrapCache
 
     /**
      * Get cache status information.
+     * @return array<string, mixed>
      */
     public function status(): array
     {

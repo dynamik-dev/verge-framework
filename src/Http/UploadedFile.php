@@ -17,13 +17,16 @@ class UploadedFile implements UploadedFileInterface
     private ?string $clientMediaType;
     private bool $moved = false;
 
+    /**
+     * @param array<string, mixed> $file
+     */
     public function __construct(array $file)
     {
-        $this->tmpName = $file['tmp_name'] ?? null;
-        $this->size = $file['size'] ?? null;
-        $this->error = $file['error'] ?? UPLOAD_ERR_OK;
-        $this->clientFilename = $file['name'] ?? null;
-        $this->clientMediaType = $file['type'] ?? null;
+        $this->tmpName = isset($file['tmp_name']) && (is_scalar($file['tmp_name']) || $file['tmp_name'] instanceof \Stringable) ? (string) $file['tmp_name'] : null;
+        $this->size = isset($file['size']) && is_numeric($file['size']) ? (int) $file['size'] : null;
+        $this->error = isset($file['error']) && is_numeric($file['error']) ? (int) $file['error'] : UPLOAD_ERR_OK;
+        $this->clientFilename = isset($file['name']) && (is_scalar($file['name']) || $file['name'] instanceof \Stringable) ? (string) $file['name'] : null;
+        $this->clientMediaType = isset($file['type']) && (is_scalar($file['type']) || $file['type'] instanceof \Stringable) ? (string) $file['type'] : null;
     }
 
     public function getStream(): StreamInterface
@@ -36,7 +39,12 @@ class UploadedFile implements UploadedFileInterface
             throw new RuntimeException('No temporary file available');
         }
 
-        return new StringStream(file_get_contents($this->tmpName));
+        $content = file_get_contents($this->tmpName);
+        if ($content === false) {
+             throw new RuntimeException("Unable to read file: {$this->tmpName}");
+        }
+
+        return new StringStream($content);
     }
 
     public function moveTo(string $targetPath): void

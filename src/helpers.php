@@ -8,6 +8,8 @@ namespace Verge {
 
     /**
      * Resolve a class from the container.
+     *
+     * @param array<string, mixed> $parameters
      */
     function make(string $abstract, array $parameters = []): mixed
     {
@@ -16,6 +18,8 @@ namespace Verge {
 
     /**
      * Create a new response instance.
+     *
+     * @param array<string, string|string[]> $headers
      */
     function response(string $body = '', int $status = 200, array $headers = []): Response
     {
@@ -24,11 +28,19 @@ namespace Verge {
 
     /**
      * Create a JSON response.
+     *
+     * @param array<string, string|string[]> $headers
      */
     function json(mixed $data, int $status = 200, array $headers = []): Response
     {
         $headers['Content-Type'] = 'application/json';
-        return new Response(json_encode($data), $status, $headers);
+        $json = json_encode($data);
+
+        if ($json === false) {
+             throw new \InvalidArgumentException('JSON encode failed: ' . json_last_error_msg());
+        }
+
+        return new Response($json, $status, $headers);
     }
 
     /**
@@ -41,6 +53,8 @@ namespace Verge {
 
     /**
      * Generate URL for a named route.
+     *
+     * @param array<string, mixed> $params
      */
     function route(string $name, array $params = []): string
     {

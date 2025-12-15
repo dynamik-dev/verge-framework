@@ -71,6 +71,7 @@ class Bundler
 
         // Get all routes
         $router = $this->app->container->resolve(RouterInterface::class);
+        /** @var RouterInterface $router */
         $routes = $router->getRoutes();
 
         // Process closure routes
@@ -82,7 +83,8 @@ class Bundler
 
         foreach ($routes as $method => $methodRoutes) {
             foreach ($methodRoutes as $route) {
-                if (!($route->handler instanceof Closure)) {
+                $handler = $route->handler;
+                if (!($handler instanceof Closure)) {
                     continue;
                 }
 
@@ -92,7 +94,7 @@ class Bundler
                     $result = $this->processClosureRoute($route);
 
                     if ($result === null) {
-                        $closureInfo = $this->extractor->extract($route->handler);
+                        $closureInfo = $this->extractor->extract($handler);
                         $skipped[] = [
                             'route' => $routeKey,
                             'reason' => $closureInfo->getSkipReason() ?? 'Unknown',
@@ -202,12 +204,13 @@ PHP;
         }
 
         $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->sourcePath, \RecursiveDirectoryIterator::SKIP_DOTS),
+            new \RecursiveDirectoryIterator($this->sourcePath ?? '', \RecursiveDirectoryIterator::SKIP_DOTS),
             \RecursiveIteratorIterator::SELF_FIRST
         );
 
         foreach ($iterator as $file) {
-            $relativePath = substr($file->getPathname(), strlen($this->sourcePath) + 1);
+            /** @var \SplFileInfo $file */
+            $relativePath = substr($file->getPathname(), strlen($this->sourcePath ?? '') + 1);
             $targetPath = $srcDir . '/' . $relativePath;
 
             if ($file->isDir()) {
@@ -261,7 +264,11 @@ PHP;
      */
     private function processClosureRoute(Route $route): ?array
     {
-        $closureInfo = $this->extractor->extract($route->handler);
+        $handler = $route->handler;
+        if (!($handler instanceof Closure)) {
+             return null;
+        }
+        $closureInfo = $this->extractor->extract($handler);
 
         if (!$closureInfo->isConvertible()) {
             return null;
@@ -300,6 +307,7 @@ PHP;
 
     /**
      * Analyze routes without building (dry run).
+     * @return array{total_routes: int, closure_routes: int, convertible: int, non_convertible: int, routes: array<string, mixed>}
      */
     public function analyze(): array
     {
@@ -310,6 +318,7 @@ PHP;
         }
 
         $router = $this->app->container->resolve(RouterInterface::class);
+        /** @var RouterInterface $router */
         $routes = $router->getRoutes();
 
         $analysis = [
@@ -324,13 +333,14 @@ PHP;
             foreach ($methodRoutes as $route) {
                 $analysis['total_routes']++;
                 $routeKey = "{$method} {$route->path}";
+                $handler = $route->handler;
 
-                if (!($route->handler instanceof Closure)) {
+                if (!($handler instanceof Closure)) {
                     $analysis['routes'][$routeKey] = [
                         'type' => 'class',
-                        'handler' => is_array($route->handler)
-                            ? implode('::', $route->handler)
-                            : $route->handler,
+                        'handler' => is_array($handler)
+                            ? implode('::', $handler)
+                            : $handler,
                     ];
                     continue;
                 }
@@ -338,7 +348,7 @@ PHP;
                 $analysis['closure_routes']++;
 
                 try {
-                    $closureInfo = $this->extractor->extract($route->handler);
+                    $closureInfo = $this->extractor->extract($handler);
 
                     if ($closureInfo->isConvertible()) {
                         $analysis['convertible']++;

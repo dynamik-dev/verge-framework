@@ -26,7 +26,7 @@ class Container implements ContainerInterface
     /** @var array<string, bool> */
     protected array $scopedBindings = [];
 
-    /** @var array<string, array>|null Cached reflection metadata */
+    /** @var array<string, array{instantiable: bool, constructor: ?array<int, array{name: string, type: ?string, builtin: bool, hasDefault: bool, default: mixed}>}>|null */
     protected ?array $reflectionCache = null;
 
     public function defaults(): static
@@ -86,6 +86,9 @@ class Container implements ContainerInterface
         return isset($this->bindings[$id]) || isset($this->instances[$id]) || class_exists($id);
     }
 
+    /**
+     * @param array<string, mixed> $parameters
+     */
     public function resolve(string $abstract, array $parameters = []): mixed
     {
         // If parameters are passed, always build fresh (don't use cached instance)
@@ -110,6 +113,9 @@ class Container implements ContainerInterface
         return $this->build($abstract);
     }
 
+    /**
+     * @param array<string, mixed> $parameters
+     */
     public function build(string $class, array $parameters = []): object
     {
         if (!class_exists($class)) {
@@ -140,9 +146,14 @@ class Container implements ContainerInterface
 
     /**
      * Build a class using cached reflection data.
+     *
+     * @param array<string, mixed> $parameters
      */
     protected function buildFromCache(string $class, array $parameters = []): object
     {
+        if ($this->reflectionCache === null || !isset($this->reflectionCache[$class])) {
+            throw new ContainerException("Class {$class} not found in reflection cache");
+        }
         $cached = $this->reflectionCache[$class];
 
         if (!$cached['instantiable']) {
@@ -160,6 +171,10 @@ class Container implements ContainerInterface
 
     /**
      * Resolve dependencies using cached parameter metadata.
+     *
+     * @param array<int, array{name: string, type: ?string, builtin: bool, hasDefault: bool, default: mixed}> $cachedParams
+     * @param array<string, mixed> $parameters
+     * @return array<mixed>
      */
     protected function resolveDependenciesFromCache(array $cachedParams, array $parameters = []): array
     {
@@ -191,6 +206,7 @@ class Container implements ContainerInterface
 
     /**
      * Set the reflection cache for faster dependency resolution.
+     * @param array<string, array{instantiable: bool, constructor: ?array<int, array{name: string, type: ?string, builtin: bool, hasDefault: bool, default: mixed}>}> $cache
      */
     public function setReflectionCache(array $cache): static
     {
@@ -240,13 +256,20 @@ class Container implements ContainerInterface
         return $dependencies;
     }
 
+    /**
+     * @param array<string, mixed> $parameters
+     */
     public function call(callable $callback, array $parameters = []): mixed
     {
         if (is_array($callback)) {
-            $reflection = new ReflectionMethod($callback[0], $callback[1]);
+             /** @var object|string $class */
+             $class = $callback[0];
+             /** @var string $method */
+             $method = $callback[1];
+             $reflection = new ReflectionMethod($class, $method);
         } elseif ($callback instanceof Closure) {
             $reflection = new ReflectionFunction($callback);
-        } elseif (is_string($callback) && function_exists($callback)) {
+        } elseif (is_string($callback)) {
             $reflection = new ReflectionFunction($callback);
         } elseif (is_object($callback) && method_exists($callback, '__invoke')) {
             $reflection = new ReflectionMethod($callback, '__invoke');

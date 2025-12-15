@@ -10,7 +10,9 @@ use Verge\Http\Response;
 
 class TestClient
 {
+    /** @var array<string, string> */
     protected array $headers = [];
+    /** @var array<string, string> */
     protected array $cookies = [];
 
     public function __construct(
@@ -31,31 +33,50 @@ class TestClient
         return $clone;
     }
 
+    /**
+     * @param array<string, mixed> $query
+     */
     public function get(string $uri, array $query = []): Response
     {
         return $this->request('GET', $uri, query: $query);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function post(string $uri, array $data = []): Response
     {
         return $this->request('POST', $uri, body: $data);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function put(string $uri, array $data = []): Response
     {
         return $this->request('PUT', $uri, body: $data);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function patch(string $uri, array $data = []): Response
     {
         return $this->request('PATCH', $uri, body: $data);
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function delete(string $uri, array $data = []): Response
     {
         return $this->request('DELETE', $uri, body: $data);
     }
 
+    /**
+     * @param array<string, mixed> $query
+     * @param array<string, mixed> $body
+     */
     protected function request(
         string $method,
         string $uri,
@@ -79,7 +100,11 @@ class TestClient
             $headers['Content-Type'] = 'application/json';
         }
 
-        $bodyString = !empty($body) ? json_encode($body) : null;
+        $encoded = !empty($body) ? json_encode($body) : null;
+        if ($encoded === false) {
+             throw new \RuntimeException('JSON encode failed: ' . json_last_error_msg());
+        }
+        $bodyString = $encoded;
 
         $request = new Request(
             method: $method,

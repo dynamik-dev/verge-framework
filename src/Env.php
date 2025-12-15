@@ -14,7 +14,9 @@ class Env
             return $default;
         }
 
-        return match (strtolower($value)) {
+        $strValue = is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
+
+        return match (strtolower($strValue)) {
             'true', '(true)' => true,
             'false', '(false)' => false,
             'null', '(null)' => null,

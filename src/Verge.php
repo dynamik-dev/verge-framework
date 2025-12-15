@@ -43,6 +43,9 @@ class Verge
         return static::$app;
     }
 
+    /**
+     * @param array<string, mixed> $parameters
+     */
     public static function make(string $abstract, array $parameters = []): mixed
     {
         if (static::$app === null) {
@@ -75,6 +78,9 @@ class Verge
         static::$app = null;
     }
 
+    /**
+     * @param array<string, mixed> $params
+     */
     public static function route(string $name, array $params = []): string
     {
         if (static::$app === null) {
@@ -86,6 +92,7 @@ class Verge
 
     public static function routes(callable $callback): RoutesBuilder
     {
+        /** @var RoutesBuilder $builder */
         $builder = make(RoutesBuilder::class);
         $callback($builder);
         return $builder;

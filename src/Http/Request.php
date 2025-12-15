@@ -13,14 +13,24 @@ class Request implements RequestInterface
 {
     use HasHeaders;
     protected string $method;
-    protected Uri $uri;
+    protected UriInterface $uri;
+    /** @var array<string, string[]> */
     protected array $headers;
     protected ?string $body;
+    /** @var array<string, mixed> */
     protected array $query;
+    /** @var array<string, mixed> */
     protected array $parsedBody;
+    /** @var array<string, mixed> */
     protected array $files;
     protected string $protocolVersion = '1.1';
 
+    /**
+     * @param array<string, string|string[]> $headers
+     * @param array<string, mixed> $query
+     * @param array<string, mixed> $parsedBody
+     * @param array<string, mixed> $files
+     */
     public function __construct(
         string $method = 'GET',
         string|UriInterface $uri = '/',
@@ -39,6 +49,9 @@ class Request implements RequestInterface
         $this->files = $files;
     }
 
+    /**
+     * @return static
+     */
     public static function capture(): static
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -51,23 +64,38 @@ class Request implements RequestInterface
         $parsedBody = [];
         if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
             $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            // Ensure content type is string
+            if (!is_string($contentType)) {
+                $contentType = '';
+            }
             if (str_contains($contentType, 'application/json')) {
-                $parsedBody = json_decode($body ?? '', true) ?? [];
+                $decoded = json_decode($body ?? '', true);
+                if (is_array($decoded)) {
+                     $parsedBody = $decoded;
+                }
             } else {
                 $parsedBody = $_POST;
             }
         }
 
+        /** @phpstan-ignore-next-line */
         return new static($method, $uri, $headers, $body, $query, $parsedBody, $files);
     }
 
+    /**
+     * @return array<string, string|string[]>
+     */
     protected static function parseHeaders(): array
     {
         $headers = [];
         foreach ($_SERVER as $key => $value) {
             if (str_starts_with($key, 'HTTP_')) {
                 $name = str_replace('_', '-', substr($key, 5));
-                $headers[$name] = $value;
+                if (is_array($value)) {
+                    $headers[$name] = array_map(fn($v) => is_scalar($v) || $v instanceof \Stringable ? (string) $v : '', $value);
+                } else {
+                    $headers[$name] = is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
+                }
             }
         }
         return $headers;
@@ -75,12 +103,16 @@ class Request implements RequestInterface
 
     // Edge API methods
 
+    /**
+     * @return array<string, mixed>
+     */
     public function json(): array
     {
         if ($this->body === null) {
             return [];
         }
-        return json_decode($this->body, true) ?? [];
+        $decoded = json_decode($this->body, true);
+        return is_array($decoded) ? $decoded : [];
     }
 
     public function body(): ?string
@@ -107,6 +139,9 @@ class Request implements RequestInterface
         return $this->headers[$key][0] ?? null;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function headers(): array
     {
         $headers = [];
@@ -121,7 +156,9 @@ class Request implements RequestInterface
         if (!isset($this->files[$key])) {
             return null;
         }
-        return new UploadedFile($this->files[$key]);
+        /** @var array<string, mixed> $fileData */
+        $fileData = $this->files[$key];
+        return new UploadedFile($fileData);
     }
 
     public function method(): string
@@ -208,6 +245,9 @@ class Request implements RequestInterface
         return $clone;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function withParsedBody(array $data): static
     {
         $clone = clone $this;
@@ -215,6 +255,9 @@ class Request implements RequestInterface
         return $clone;
     }
 
+    /**
+     * @param array<string, mixed> $query
+     */
     public function withQuery(array $query): static
     {
         $clone = clone $this;

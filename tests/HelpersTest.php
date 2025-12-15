@@ -52,7 +52,7 @@ describe('Helper Functions', function () {
         beforeEach(fn () => Verge::reset());
 
         it('resolves from container', function () {
-            Verge::buildDefaults();
+            Verge::create();
 
             $router = make(RouterInterface::class);
 
@@ -159,6 +159,13 @@ describe('Helper Functions', function () {
 
             expect($decoded['user']['name'])->toBe('John');
             expect($decoded['user']['roles'])->toBe(['admin', 'user']);
+        });
+
+        it('throws exception on invalid JSON', function () {
+            $data = ['self' => null];
+            $data['self'] = &$data; // Circular reference
+
+            expect(fn () => json($data))->toThrow(InvalidArgumentException::class, 'JSON encode failed');
         });
 
         it('encodes empty array', function () {

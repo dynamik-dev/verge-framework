@@ -7,16 +7,19 @@ namespace Verge\Bootstrap;
 use Psr\Http\Message\RequestInterface;
 use Verge\Routing\Route;
 use Verge\Routing\RouteMatch;
+use Verge\Routing\RouteMatcherInterface;
 use Verge\Routing\RouteNotFoundException;
-use Verge\Routing\RouterInterface;
 
 /**
  * A read-only router that loads pre-cached route data for optimized matching.
  *
  * Static routes use O(1) hash lookup, dynamic routes are grouped by
  * segment count to minimize regex matching iterations.
+ *
+ * Implements RouteMatcherInterface (not RouterInterface) because it only
+ * supports reading routes, not registering new ones.
  */
-class CachedRouter implements RouterInterface
+class CachedRouter implements RouteMatcherInterface
 {
     /** @var array<string, array<string, array<string, mixed>>> */
     private array $static = [];
@@ -106,30 +109,6 @@ class CachedRouter implements RouterInterface
         }
 
         return RouteMatch::notFound();
-    }
-
-    public function add(string $method, string $path, callable|array|string $handler): Route
-    {
-        throw new \RuntimeException(
-            'Cannot add routes to a cached router. ' .
-            'Clear the route cache to add new routes.'
-        );
-    }
-
-    public function any(string $path, callable|array|string $handler): Route
-    {
-        throw new \RuntimeException(
-            'Cannot add routes to a cached router. ' .
-            'Clear the route cache to add new routes.'
-        );
-    }
-
-    public function registerNamedRoute(string $name, Route $route): void
-    {
-        throw new \RuntimeException(
-            'Cannot register named routes on a cached router. ' .
-            'Clear the route cache to register new routes.'
-        );
     }
 
     public function getNamedRoute(string $name): ?Route
@@ -239,7 +218,7 @@ class CachedRouter implements RouterInterface
         $paramNames = $routeData['paramNames'] ?? [];
 
         $route = new Route(
-            $method,
+            [$method],
             $path,
             $handler,
             $pattern ?? '#^' . preg_quote($path, '#') . '$#',

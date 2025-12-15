@@ -34,10 +34,11 @@ namespace Verge {
     function json(mixed $data, int $status = 200, array $headers = []): Response
     {
         $headers['Content-Type'] = 'application/json';
-        $json = json_encode($data);
 
-        if ($json === false) {
-            throw new \InvalidArgumentException('JSON encode failed: ' . json_last_error_msg());
+        try {
+            $json = json_encode($data, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new \InvalidArgumentException('JSON encode failed: ' . $e->getMessage(), 0, $e);
         }
 
         return new Response($json, $status, $headers);

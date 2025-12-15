@@ -11,7 +11,7 @@ class Routes
     /** @var RouteInfo[] */
     protected array $routes = [];
 
-    public function __construct(RouterInterface $router)
+    public function __construct(RouteMatcherInterface $router)
     {
         $this->routes = $this->extract($router);
     }
@@ -89,13 +89,13 @@ class Routes
      *
      * @return RouteInfo[]
      */
-    protected function extract(RouterInterface $router): array
+    protected function extract(RouteMatcherInterface $router): array
     {
         $routes = [];
 
         foreach ($router->getRoutes() as $method => $methodRoutes) {
             foreach ($methodRoutes as $route) {
-                $routes[] = $this->extractRouteInfo($route);
+                $routes[] = $this->extractRouteInfo($route, $method);
             }
         }
 
@@ -105,10 +105,10 @@ class Routes
     /**
      * Extract RouteInfo from a Route instance.
      */
-    protected function extractRouteInfo(Route $route): RouteInfo
+    protected function extractRouteInfo(Route $route, string $method): RouteInfo
     {
         return new RouteInfo(
-            method: $route->method,
+            method: $method,
             path: $route->path,
             name: $route->getName(),
             params: $this->extractParams($route),
@@ -120,53 +120,11 @@ class Routes
     /**
      * Extract parameter information from route path.
      *
-     * @return array<int, array{name: string, required: bool, constraint: ?string}>
+     * @return ParamInfo[]
      */
     protected function extractParams(Route $route): array
     {
-        $params = [];
-
-        // Parse the path to find parameters
-        // Match {name}, {name?}, {name:constraint}, {name?:constraint}
-        $offset = 0;
-        $path = $route->path;
-
-        while (preg_match('/\{([a-zA-Z_][a-zA-Z0-9_]*)(\?)?(?::)?/', $path, $match, PREG_OFFSET_CAPTURE, $offset)) {
-            $paramName = $match[1][0];
-            $isOptional = isset($match[2][0]);
-            $matchStart = $match[0][1];
-
-            // Find the closing brace, accounting for nested braces in constraint
-            $braceDepth = 1;
-            $pos = $matchStart + strlen($match[0][0]);
-
-            while ($pos < strlen($path) && $braceDepth > 0) {
-                if ($path[$pos] === '{') {
-                    $braceDepth++;
-                } elseif ($path[$pos] === '}') {
-                    $braceDepth--;
-                }
-                $pos++;
-            }
-
-            $fullMatch = substr($path, $matchStart, $pos - $matchStart);
-
-            // Extract constraint if present
-            $constraint = null;
-            if (preg_match('/\{[^:}]+\??(:.+)\}$/', $fullMatch, $constraintMatch)) {
-                $constraint = substr($constraintMatch[1], 1); // Remove leading ':'
-            }
-
-            $params[] = [
-                'name' => $paramName,
-                'required' => !$isOptional,
-                'constraint' => $constraint,
-            ];
-
-            $offset = $pos;
-        }
-
-        return $params;
+        return PathParser::extractParams($route->path);
     }
 
     /**

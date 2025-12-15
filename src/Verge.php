@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace Verge;
 
-use Closure;
-use Verge\Routing\RouterInterface;
-use Verge\Routing\RoutesBuilder;
-
 class Verge
 {
     protected static ?App $app = null;
@@ -21,23 +17,6 @@ class Verge
         return static::$app;
     }
 
-    /**
-     * @deprecated Use Verge::create() instead
-     */
-    public static function build(?callable $callback = null): App
-    {
-        static::$app = App::build($callback);
-        return static::$app;
-    }
-
-    /**
-     * @deprecated Use Verge::create() instead
-     */
-    public static function buildDefaults(): App
-    {
-        return static::create();
-    }
-
     public static function app(): ?App
     {
         return static::$app;
@@ -49,7 +28,7 @@ class Verge
     public static function make(string $abstract, array $parameters = []): mixed
     {
         if (static::$app === null) {
-            throw new \RuntimeException('No application instance. Call Verge::build() or Verge::buildDefaults() first.');
+            throw new \RuntimeException('No application instance. Call Verge::create() first.');
         }
 
         return static::$app->make($abstract, $parameters);
@@ -67,7 +46,7 @@ class Verge
     public static function env(string $key, mixed $default = null): mixed
     {
         if (static::$app === null) {
-            throw new \RuntimeException('No application instance. Call Verge::build() or Verge::buildDefaults() first.');
+            throw new \RuntimeException('No application instance. Call Verge::create() first.');
         }
 
         return static::$app->env($key, $default);
@@ -88,13 +67,5 @@ class Verge
         }
 
         return static::$app->url($name, $params);
-    }
-
-    public static function routes(callable $callback): RoutesBuilder
-    {
-        /** @var RoutesBuilder $builder */
-        $builder = make(RoutesBuilder::class);
-        $callback($builder);
-        return $builder;
     }
 }

@@ -33,7 +33,7 @@ describe('CachedRouter', function () {
 
             $router = new CachedRouter($cacheData);
 
-            $request = new Request('GET', '/');
+            $request = Request::create('GET', '/');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -53,7 +53,7 @@ describe('CachedRouter', function () {
             ];
 
             $router = new CachedRouter($cacheData);
-            $request = new Request('GET', '/not-found');
+            $request = Request::create('GET', '/not-found');
             $match = $router->match($request);
 
             expect($match->matched)->toBeFalse();
@@ -84,7 +84,7 @@ describe('CachedRouter', function () {
             ];
 
             $router = new CachedRouter($cacheData);
-            $request = new Request('GET', '/users/123');
+            $request = Request::create('GET', '/users/123');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -113,7 +113,7 @@ describe('CachedRouter', function () {
             ];
 
             $router = new CachedRouter($cacheData);
-            $request = new Request('GET', '/users/42/posts/99');
+            $request = Request::create('GET', '/users/42/posts/99');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -142,7 +142,7 @@ describe('CachedRouter', function () {
             $router = new CachedRouter($cacheData);
 
             expect(fn () => $router->url('unknown'))
-                ->toThrow(\Verge\Routing\RouteNotFoundException::class);
+                ->toThrow(\Verge\Routing\Exceptions\RouteNotFoundException::class);
         });
 
         it('appends extra params as query string', function () {
@@ -161,20 +161,17 @@ describe('CachedRouter', function () {
         });
     });
 
-    describe('read-only enforcement', function () {
-        it('throws when trying to add routes', function () {
+    describe('interface compliance', function () {
+        it('implements RouteMatcherInterface', function () {
             $router = new CachedRouter(['static' => [], 'dynamic' => [], 'named' => []]);
 
-            expect(fn () => $router->add('GET', '/test', fn () => 'test'))
-                ->toThrow(\RuntimeException::class, 'Cannot add routes to a cached router');
+            expect($router)->toBeInstanceOf(\Verge\Routing\RouteMatcherInterface::class);
         });
 
-        it('throws when trying to register named routes', function () {
+        it('does not implement RouterInterface (read-only by design)', function () {
             $router = new CachedRouter(['static' => [], 'dynamic' => [], 'named' => []]);
-            $route = new \Verge\Routing\Route('GET', '/test', fn () => 'test', '#^/test$#');
 
-            expect(fn () => $router->registerNamedRoute('test', $route))
-                ->toThrow(\RuntimeException::class, 'Cannot register named routes');
+            expect($router)->not->toBeInstanceOf(\Verge\Routing\RouterInterface::class);
         });
     });
 
@@ -233,7 +230,7 @@ describe('CachedRouter', function () {
             ];
 
             $router = new CachedRouter($cacheData);
-            $request = new Request('GET', '/admin');
+            $request = Request::create('GET', '/admin');
             $match = $router->match($request);
 
             expect($match->route->getMiddleware())->toBe(['AuthMiddleware', 'AdminMiddleware']);

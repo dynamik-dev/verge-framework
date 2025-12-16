@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Verge\Routing;
 
-use Psr\Http\Message\RequestInterface;
-
-interface RouterInterface
+/**
+ * Interface for route registration (write operations).
+ *
+ * Extends RouteMatcherInterface to include read operations (matching, URL generation).
+ */
+interface RouterInterface extends RouteMatcherInterface
 {
     /**
      * @param callable|array<mixed>|string $handler
@@ -18,19 +21,10 @@ interface RouterInterface
      */
     public function any(string $path, callable|array|string $handler): Route;
 
-    public function match(RequestInterface $request): RouteMatch;
-
     public function registerNamedRoute(string $name, Route $route): void;
 
-    public function getNamedRoute(string $name): ?Route;
-
     /**
-     * @param array<string, mixed> $params
+     * @return Route[]
      */
-    public function url(string $name, array $params = []): string;
-
-    /**
-     * @return array<string, Route[]>
-     */
-    public function getRoutes(): array;
+    public function register(Route $route): array;
 }

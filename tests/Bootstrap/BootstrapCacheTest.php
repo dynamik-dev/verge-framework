@@ -26,7 +26,7 @@ describe('BootstrapCache', function () {
             $app = new App();
             $cache = new BootstrapCache(path: $this->cacheDir);
 
-            $app->configure($cache);
+            $app->module($cache);
 
             expect($app->make(BootstrapCache::class))->toBe($cache);
         });
@@ -35,7 +35,7 @@ describe('BootstrapCache', function () {
             $app = new App();
             $cache = new BootstrapCache(path: $this->cacheDir, enabled: false);
 
-            $app->configure($cache);
+            $app->module($cache);
 
             // Router should still be the regular Router, not CachedRouter
             expect($app->container->resolve(RouterInterface::class))
@@ -48,13 +48,13 @@ describe('BootstrapCache', function () {
             $app1->get('/', ['TestHomeController', 'index']);
 
             $cache1 = new BootstrapCache(path: $this->cacheDir);
-            $app1->configure($cache1);
+            $app1->module($cache1);
             $cache1->warm();
 
             // Create a new app and verify it uses cached router
             $app2 = new App();
             $cache2 = new BootstrapCache(path: $this->cacheDir);
-            $app2->configure($cache2);
+            $app2->module($cache2);
 
             // Routes method returns a Routes object, but we can check the router indirectly
             expect($cache2->isCached())->toBeTrue();
@@ -68,7 +68,7 @@ describe('BootstrapCache', function () {
             $app->get('/users/{id}', ['TestUserController', 'show']);
 
             $cache = new BootstrapCache(path: $this->cacheDir);
-            $app->configure($cache);
+            $app->module($cache);
 
             $result = $cache->warm();
 
@@ -82,7 +82,7 @@ describe('BootstrapCache', function () {
             $app->get('/users', ['TestUserController', 'index']);
 
             $cache = new BootstrapCache(path: $this->cacheDir);
-            $app->configure($cache);
+            $app->module($cache);
 
             $result = $cache->warm();
 
@@ -91,11 +91,11 @@ describe('BootstrapCache', function () {
             expect($result->hasWarnings())->toBeTrue();
         });
 
-        it('throws when called before configure()', function () {
+        it('throws when called before module()', function () {
             $cache = new BootstrapCache(path: $this->cacheDir);
 
             expect(fn () => $cache->warm())
-                ->toThrow(\RuntimeException::class, 'must be configured');
+                ->toThrow(\RuntimeException::class, 'must be registered');
         });
     });
 
@@ -105,7 +105,7 @@ describe('BootstrapCache', function () {
             $app->get('/', ['TestHomeController', 'index']);
 
             $cache = new BootstrapCache(path: $this->cacheDir);
-            $app->configure($cache);
+            $app->module($cache);
             $cache->warm();
 
             expect(file_exists($this->cacheDir . '/routes.php'))->toBeTrue();
@@ -127,7 +127,7 @@ describe('BootstrapCache', function () {
             $app->get('/', ['TestHomeController', 'index']);
 
             $cache = new BootstrapCache(path: $this->cacheDir);
-            $app->configure($cache);
+            $app->module($cache);
             $cache->warm();
 
             expect($cache->isCached())->toBeTrue();
@@ -140,7 +140,7 @@ describe('BootstrapCache', function () {
             $app->get('/', ['TestHomeController', 'index']);
 
             $cache = new BootstrapCache(path: $this->cacheDir);
-            $app->configure($cache);
+            $app->module($cache);
 
             $status = $cache->status();
 
@@ -156,7 +156,7 @@ describe('BootstrapCache', function () {
             $app->get('/', ['TestHomeController', 'index']);
 
             $cache = new BootstrapCache(path: $this->cacheDir);
-            $app->configure($cache);
+            $app->module($cache);
             $cache->warm();
 
             $status = $cache->status();
@@ -174,13 +174,13 @@ describe('BootstrapCache', function () {
             $app1->get('/', ['CacheTestHomeController', 'index']);
 
             $cache1 = new BootstrapCache(path: $this->cacheDir, enabled: true);
-            $app1->configure($cache1);
+            $app1->module($cache1);
             $cache1->warm();
 
             // Create new app with cached routes
             $app2 = new App();
             $cache2 = new BootstrapCache(path: $this->cacheDir, enabled: true);
-            $app2->configure($cache2);
+            $app2->module($cache2);
 
             $response = $app2->test()->get('/');
 
@@ -194,13 +194,13 @@ describe('BootstrapCache', function () {
             $app1->get('/users/{id}', ['CacheTestUserShowController', 'index']);
 
             $cache1 = new BootstrapCache(path: $this->cacheDir, enabled: true);
-            $app1->configure($cache1);
+            $app1->module($cache1);
             $cache1->warm();
 
             // Test with cached routes
             $app2 = new App();
             $cache2 = new BootstrapCache(path: $this->cacheDir, enabled: true);
-            $app2->configure($cache2);
+            $app2->module($cache2);
 
             $response = $app2->test()->get('/users/123');
 
@@ -214,13 +214,13 @@ describe('BootstrapCache', function () {
             $app1->get('/protected', ['CacheTestProtectedController', 'index'], ['CacheTestMiddleware']);
 
             $cache1 = new BootstrapCache(path: $this->cacheDir, enabled: true);
-            $app1->configure($cache1);
+            $app1->module($cache1);
             $cache1->warm();
 
             // Test with cached routes
             $app2 = new App();
             $cache2 = new BootstrapCache(path: $this->cacheDir, enabled: true);
-            $app2->configure($cache2);
+            $app2->module($cache2);
 
             $response = $app2->test()->get('/protected');
 

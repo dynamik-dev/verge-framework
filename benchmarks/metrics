@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HISTORY_FILE="$SCRIPT_DIR/history.csv"
+
+# Run benchmarks and capture output
+BENCH=$(./vendor/bin/phpbench run --report=aggregate 2>/dev/null | grep "AppBench")
+
+# Extract benchmark times (column 8 = mode/time, pipe-delimited)
+STATIC=$(echo "$BENCH" | grep "benchStaticRoute " | awk -F'|' '{gsub(/[ \t]+/, "", $8); print $8}')
+DYNAMIC=$(echo "$BENCH" | grep "benchDynamicRoute " | awk -F'|' '{gsub(/[ \t]+/, "", $8); print $8}')
+MULTI=$(echo "$BENCH" | grep "benchMultiParamRoute " | awk -F'|' '{gsub(/[ \t]+/, "", $8); print $8}')
+GROUP=$(echo "$BENCH" | grep "benchGroupedRouteWithMiddleware " | awk -F'|' '{gsub(/[ \t]+/, "", $8); print $8}')
+CONTAINER=$(echo "$BENCH" | grep "benchContainerResolution " | awk -F'|' '{gsub(/[ \t]+/, "", $8); print $8}')
+
+# Get memory from any row (column 7 = mem_peak)
+MEMORY=$(echo "$BENCH" | head -1 | awk -F'|' '{gsub(/[ \t]+/, "", $7); print $7}')
+
+# Bundle metrics
+SIZE=$(du -sh src | cut -f1 | tr -d ' ')
+FILES=$(find src -name "*.php" | wc -l | tr -d ' ')
+LOC=$(cat src/*.php src/**/*.php 2>/dev/null | wc -l | tr -d ' ')
+
+# Timestamp
+TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+
+# Output header and data
+echo "timestamp           | static   | dynamic  | multi    | grouped  | container | memory  | size  | files | loc"
+echo "--------------------|----------|----------|----------|----------|-----------|---------|-------|-------|------"
+printf "%-19s | %-8s | %-8s | %-8s | %-8s | %-9s | %-7s | %-5s | %-5s | %s\n" \
+    "$TIMESTAMP" "$STATIC" "$DYNAMIC" "$MULTI" "$GROUP" "$CONTAINER" "$MEMORY" "$SIZE" "$FILES" "$LOC"
+
+# Save to history if --save flag is passed
+if [[ "$1" == "--save" ]]; then
+    # Create CSV with header if it doesn't exist
+    if [[ ! -f "$HISTORY_FILE" ]]; then
+        echo "timestamp,static,dynamic,multi,grouped,container,memory,size,files,loc" > "$HISTORY_FILE"
+    fi
+
+    # Append row
+    echo "$TIMESTAMP,$STATIC,$DYNAMIC,$MULTI,$GROUP,$CONTAINER,$MEMORY,$SIZE,$FILES,$LOC" >> "$HISTORY_FILE"
+    echo ""
+    echo "Saved to $HISTORY_FILE"
+fi

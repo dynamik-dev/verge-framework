@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Verge\Env;
+use Verge\Env\Env;
 
 describe('Env', function () {
 

@@ -46,6 +46,45 @@ class ClassWithMixedParams
     }
 }
 
+// Contextual binding fixtures
+interface HttpClientInterface
+{
+    public function getBaseUri(): ?string;
+}
+
+class HttpClient implements HttpClientInterface
+{
+    public function __construct(public ?string $baseUri = null)
+    {
+    }
+
+    public function getBaseUri(): ?string
+    {
+        return $this->baseUri;
+    }
+}
+
+class WeatherService
+{
+    public function __construct(public HttpClientInterface $client)
+    {
+    }
+}
+
+class StripeService
+{
+    public function __construct(public HttpClientInterface $client)
+    {
+    }
+}
+
+class GenericService
+{
+    public function __construct(public HttpClientInterface $client)
+    {
+    }
+}
+
 interface TestInterface
 {
 }
@@ -511,6 +550,90 @@ describe('Container', function () {
             $container->instance('test', 'second');
 
             expect($container->get('test'))->toBe('second');
+        });
+    });
+
+    describe('for() contextual binding', function () {
+        it('binds different implementations for different consumers', function () {
+            $container = new Container();
+
+            $container->bind(HttpClientInterface::class, fn () => new HttpClient('https://api.weather.com'))
+                ->for(WeatherService::class);
+
+            $container->bind(HttpClientInterface::class, fn () => new HttpClient('https://api.stripe.com'))
+                ->for(StripeService::class);
+
+            $weather = $container->build(WeatherService::class);
+            $stripe = $container->build(StripeService::class);
+
+            expect($weather->client->getBaseUri())->toBe('https://api.weather.com');
+            expect($stripe->client->getBaseUri())->toBe('https://api.stripe.com');
+        });
+
+        it('falls back to default binding when no contextual binding exists', function () {
+            $container = new Container();
+
+            $container->bind(HttpClientInterface::class, fn () => new HttpClient('https://api.weather.com'))
+                ->for(WeatherService::class);
+
+            // Default binding for everything else
+            $container->bind(HttpClientInterface::class, fn () => new HttpClient('https://default.com'));
+
+            $weather = $container->build(WeatherService::class);
+            $generic = $container->build(GenericService::class);
+
+            expect($weather->client->getBaseUri())->toBe('https://api.weather.com');
+            expect($generic->client->getBaseUri())->toBe('https://default.com');
+        });
+
+        it('accepts array of contexts', function () {
+            $container = new Container();
+            $sharedClient = new HttpClient('https://shared.api.com');
+
+            $container->bind(HttpClientInterface::class, fn () => $sharedClient)
+                ->for([WeatherService::class, StripeService::class]);
+
+            $weather = $container->build(WeatherService::class);
+            $stripe = $container->build(StripeService::class);
+
+            expect($weather->client)->toBe($sharedClient);
+            expect($stripe->client)->toBe($sharedClient);
+        });
+
+        it('works with singleton contextual bindings', function () {
+            $container = new Container();
+
+            $container->singleton(HttpClientInterface::class, fn () => new HttpClient('https://api.weather.com'))
+                ->for(WeatherService::class);
+
+            // Default for others
+            $container->bind(HttpClientInterface::class, fn () => new HttpClient('https://default.com'));
+
+            $weather1 = $container->build(WeatherService::class);
+            $weather2 = $container->build(WeatherService::class);
+
+            // Each build creates new WeatherService, but client comes from contextual (not singleton cached)
+            // Note: contextual bindings don't cache like singletons - they're resolved fresh each time
+            expect($weather1->client->getBaseUri())->toBe('https://api.weather.com');
+            expect($weather2->client->getBaseUri())->toBe('https://api.weather.com');
+        });
+
+        it('throws when for() called without preceding binding', function () {
+            $container = new Container();
+
+            expect(fn () => $container->for(WeatherService::class))
+                ->toThrow(ContainerException::class, 'without a preceding');
+        });
+
+        it('removes binding from defaults when for() is called', function () {
+            $container = new Container();
+
+            $container->bind(HttpClientInterface::class, fn () => new HttpClient('https://contextual.com'))
+                ->for(WeatherService::class);
+
+            // No default binding exists, so this should fail for GenericService
+            expect(fn () => $container->build(GenericService::class))
+                ->toThrow(ContainerException::class);
         });
     });
 

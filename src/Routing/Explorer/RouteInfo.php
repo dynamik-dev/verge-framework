@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Verge\Routing;
+namespace Verge\Routing\Explorer;
 
 class RouteInfo
 {
     /**
-     * @param array<int, array{name: string, required: bool, constraint: ?string}> $params
+     * @param ParamInfo[] $params
      * @param array<int, string> $middleware
      * @param array{type: 'closure'}|array{type: 'controller', class: string, method: string}|array{type: 'invokable', class: string}|array{type: 'function', name: string}|array{type: 'unknown'} $handler
      */
@@ -41,7 +41,7 @@ class RouteInfo
             'method' => $this->method,
             'path' => $this->path,
             'name' => $this->name,
-            'params' => $this->params,
+            'params' => array_map(fn (ParamInfo $p) => $p->toArray(), $this->params),
             'middleware' => $this->middleware,
             'handler' => $this->handler,
         ];

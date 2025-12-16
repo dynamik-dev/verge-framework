@@ -8,14 +8,17 @@ use Closure;
 use Verge\Cache;
 use Verge\Log;
 use Verge\Concerns\HasMiddleware;
-use Verge\Events\EventDispatcher;
+use Verge\Env\EnvInterface;
+use Verge\Events\EventDispatcherInterface;
 use Verge\Http\Request;
+use Verge\Http\RequestHandlerInterface;
 use Verge\Http\Response;
 use Verge\Routing\Route;
 use Verge\Routing\Router;
 use Verge\Routing\RouterInterface;
+use Verge\Routing\RouteMatcherInterface;
 use Verge\Routing\RouteGroup;
-use Verge\Routing\Routes;
+use Verge\Routing\Explorer\RouteExplorer;
 use Verge\Testing\TestClient;
 use Psr\Container\ContainerInterface;
 
@@ -24,12 +27,14 @@ class App
     use HasMiddleware;
 
     public Container $container;
-    protected ?RouterInterface $router = null;
-    protected ?Env $env = null;
-    protected ?EventDispatcher $events = null;
+    protected RouterInterface|RouteMatcherInterface|null $router = null;
+    protected ?EnvInterface $env = null;
+    protected ?EventDispatcherInterface $events = null;
+    protected ?Config\Config $config = null;
     protected string $currentPrefix = '';
     protected ?RouteGroup $currentGroup = null;
     protected bool $booted = false;
+    protected ?string $basePath = null;
 
     /** @var array<string, array<string, \Closure>> */
     protected array $drivers = [];
@@ -37,16 +42,16 @@ class App
     /** @var array<string, string> Default driver names per service */
     protected array $defaultDrivers = [];
 
+    /** @var array<string, callable|class-string> Registered console commands */
+    protected array $commands = [];
+
     public function __construct(?ContainerInterface $container = null)
     {
         if ($container === null) {
-            // No container = use defaults (Router, Env)
-            $this->container = (new Container())->defaults();
+            $this->container = new Container();
         } elseif ($container instanceof Container) {
             $this->container = $container;
         } else {
-            // External PSR-11 container - must be wrapped or incompatible if we rely on Container methods
-            // For now, if it's not our Container, we can't assign it to public Container $container.
             throw new \InvalidArgumentException('App requires instance of Verge\Container');
         }
 
@@ -54,39 +59,13 @@ class App
         $this->container->instance(App::class, $this);
         $this->container->instance(static::class, $this);
 
-        $this->registerDefaultDrivers();
-    }
-
-    /**
-     * Register framework default drivers.
-     */
-    protected function registerDefaultDrivers(): void
-    {
-        // Cache drivers
-        $this->driver('cache', 'memory', fn () => new Cache\Drivers\MemoryCacheDriver());
-        $this->defaultDriver('cache', 'memory');
-
-        // Wire CacheInterface to use driver system
-        $this->singleton(Cache\CacheInterface::class, fn () => $this->driver('cache'));
-
-        // Log drivers
-        $logPath = $this->env('LOG_PATH', 'php://stderr');
-        $logLevel = $this->env('LOG_LEVEL', 'debug');
-
-        $this->driver('log', 'stream', fn () => new Log\Drivers\StreamLogDriver(
-            is_scalar($logPath) ? (string)$logPath : 'php://stderr',
-            Log\LogLevel::from(is_scalar($logLevel) ? (string)$logLevel : 'debug')
-        ));
-        $this->driver('log', 'array', fn () => new Log\Drivers\ArrayLogDriver());
-        $this->defaultDriver('log', 'stream');
-
-        // Wire LoggerInterface to use driver system
-        $this->singleton(Log\LoggerInterface::class, fn () => $this->driver('log'));
+        // Bootstrap framework modules
+        $this->module(new AppBuilder());
     }
 
     protected function router(): RouterInterface
     {
-        if ($this->router !== null) {
+        if ($this->router instanceof RouterInterface) {
             return $this->router;
         }
         $router = $this->container->resolve(RouterInterface::class);
@@ -96,26 +75,26 @@ class App
         return $this->router = $router;
     }
 
-    protected function getEnv(): Env
+    protected function getEnv(): EnvInterface
     {
         if ($this->env !== null) {
             return $this->env;
         }
-        $env = $this->container->resolve(Env::class);
-        if (!$env instanceof Env) {
-            throw new \RuntimeException('Resolved service is not an Env');
+        $env = $this->container->resolve(EnvInterface::class);
+        if (!$env instanceof EnvInterface) {
+            throw new \RuntimeException('Resolved service is not an EnvInterface');
         }
         return $this->env = $env;
     }
 
-    protected function events(): EventDispatcher
+    protected function events(): EventDispatcherInterface
     {
         if ($this->events !== null) {
             return $this->events;
         }
-        $events = $this->container->resolve(EventDispatcher::class);
-        if (!$events instanceof EventDispatcher) {
-            throw new \RuntimeException('Resolved service is not an EventDispatcher');
+        $events = $this->container->resolve(EventDispatcherInterface::class);
+        if (!$events instanceof EventDispatcherInterface) {
+            throw new \RuntimeException('Resolved service is not an EventDispatcherInterface');
         }
         return $this->events = $events;
     }
@@ -172,66 +151,70 @@ class App
         return $this->events()->hasListeners($event);
     }
 
+    /**
+     * Register a callback to run after all modules are loaded.
+     *
+     * @param callable(): void $callback
+     */
+    public function ready(callable $callback): static
+    {
+        return $this->on('app.ready', $callback);
+    }
+
     // Routing methods (forwarded to router)
 
     /**
      * @param array<int, string> $middleware
      * @param callable|array<mixed>|string $handler
      */
-    public function get(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): static
+    public function get(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): Route
     {
-        $this->addRoute('GET', $path, $handler, $middleware, $name);
-        return $this;
+        return $this->addRoute('GET', $path, $handler, $middleware, $name);
     }
 
     /**
      * @param array<int, string> $middleware
      * @param callable|array<mixed>|string $handler
      */
-    public function post(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): static
+    public function post(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): Route
     {
-        $this->addRoute('POST', $path, $handler, $middleware, $name);
-        return $this;
+        return $this->addRoute('POST', $path, $handler, $middleware, $name);
     }
 
     /**
      * @param array<int, string> $middleware
      * @param callable|array<mixed>|string $handler
      */
-    public function put(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): static
+    public function put(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): Route
     {
-        $this->addRoute('PUT', $path, $handler, $middleware, $name);
-        return $this;
+        return $this->addRoute('PUT', $path, $handler, $middleware, $name);
     }
 
     /**
      * @param array<int, string> $middleware
      * @param callable|array<mixed>|string $handler
      */
-    public function patch(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): static
+    public function patch(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): Route
     {
-        $this->addRoute('PATCH', $path, $handler, $middleware, $name);
-        return $this;
+        return $this->addRoute('PATCH', $path, $handler, $middleware, $name);
     }
 
     /**
      * @param array<int, string> $middleware
      * @param callable|array<mixed>|string $handler
      */
-    public function delete(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): static
+    public function delete(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): Route
     {
-        $this->addRoute('DELETE', $path, $handler, $middleware, $name);
-        return $this;
+        return $this->addRoute('DELETE', $path, $handler, $middleware, $name);
     }
 
     /**
      * @param array<int, string> $middleware
      * @param callable|array<mixed>|string $handler
      */
-    public function any(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): static
+    public function any(string $path, callable|array|string $handler, array $middleware = [], ?string $name = null): Route
     {
-        $this->addRoute('ANY', $path, $handler, $middleware, $name);
-        return $this;
+        return $this->addRoute('ANY', $path, $handler, $middleware, $name);
     }
 
     /**
@@ -289,6 +272,17 @@ class App
     public function scoped(string $abstract, Closure|string $concrete): static
     {
         $this->container->scoped($abstract, $concrete);
+        return $this;
+    }
+
+    /**
+     * Make the preceding binding contextual for specific classes.
+     *
+     * @param string|string[] $contexts
+     */
+    public function for(string|array $contexts): static
+    {
+        $this->container->for($contexts);
         return $this;
     }
 
@@ -394,62 +388,152 @@ class App
     }
 
     /**
-     * @param callable(App): void|string|array<mixed> $provider
+     * Set the base path for the application.
      */
-    public function configure(callable|string|array $provider): static
+    public function setBasePath(string $path): static
     {
-        if (is_array($provider)) {
-            foreach ($provider as $p) {
-                /** @var callable(App): void|string|array<mixed> $p */
-                $this->configure($p);
-            }
-            return $this;
-        }
-
-        if (is_string($provider)) {
-            $provider = $this->container->resolve($provider);
-        }
-
-        if (!is_callable($provider)) {
-            throw new \RuntimeException('Provider must be callable');
-        }
-        $provider($this);
+        $this->basePath = rtrim($path, '/\\');
         return $this;
     }
 
     /**
-     * Get route introspection or configure routes.
-     *
-     * When called with no arguments, returns a Routes instance for introspection.
-     * When called with a callable or RouterInterface, configures routes.
-     *
-     * @param callable|RouterInterface|null $routes
-     * @return ($routes is null ? Routes : static)
+     * Get the base path, optionally appending a sub-path.
      */
-    public function routes(callable|RouterInterface|null $routes = null): Routes|static
+    public function basePath(string $path = ''): string
     {
-        // No arguments - return Routes for introspection
-        if ($routes === null) {
-            return new Routes($this->router());
+        if ($this->basePath === null) {
+            throw new \RuntimeException('Base path not set. Call setBasePath() first.');
         }
 
-        if ($routes instanceof RouterInterface) {
-            // Merge routes from provided router
-            foreach ($routes->getRoutes() as $method => $methodRoutes) {
-                foreach ($methodRoutes as $route) {
-                    // Apply global middleware to each route
-                    foreach ($this->middleware as $middleware) {
-                        $route->use($middleware);
-                    }
-                }
+        if ($path === '') {
+            return $this->basePath;
+        }
+
+        return $this->basePath . DIRECTORY_SEPARATOR . ltrim($path, '/\\');
+    }
+
+    /**
+     * Get the config instance.
+     */
+    protected function getConfig(): Config\Config
+    {
+        if ($this->config !== null) {
+            return $this->config;
+        }
+
+        $config = $this->container->resolve(Config\Config::class);
+        if (!$config instanceof Config\Config) {
+            throw new \RuntimeException('Resolved service is not a Config instance');
+        }
+
+        return $this->config = $config;
+    }
+
+    /**
+     * Get or set config values.
+     *
+     * @param string|array<string, mixed>|null $key
+     */
+    public function config(string|array|null $key = null, mixed $default = null): mixed
+    {
+        $config = $this->getConfig();
+
+        // Get all config
+        if ($key === null) {
+            return $config->all();
+        }
+
+        // Set config values
+        if (is_array($key)) {
+            $config->set($key);
+            return null;
+        }
+
+        // Get config value
+        return $config->get($key, $default);
+    }
+
+    /**
+     * Load config from a file.
+     */
+    public function loadConfig(string $path, ?string $namespace = null): static
+    {
+        $this->getConfig()->load($path, $namespace);
+        return $this;
+    }
+
+    /**
+     * Register a module or closure module.
+     *
+     * @param callable(App): void|string|array<mixed> $module
+     */
+    public function module(callable|string|array $module): static
+    {
+        if (is_array($module)) {
+            foreach ($module as $m) {
+                /** @var callable(App): void|string|array<mixed> $m */
+                $this->module($m);
             }
-            // Replace router with the provided one
-            $this->router = $routes;
             return $this;
         }
 
-        // Callable - pass router
-        $routes($this->router());
+        if (is_string($module)) {
+            $module = $this->container->resolve($module);
+        }
+
+        if (!is_callable($module)) {
+            throw new \RuntimeException('Module must be callable');
+        }
+        $module($this);
+        return $this;
+    }
+
+    /**
+     * Register a console command.
+     *
+     * @param callable|class-string $handler
+     */
+    public function command(string $name, callable|string $handler): static
+    {
+        $this->commands[$name] = $handler;
+        return $this;
+    }
+
+    /**
+     * Get all registered console commands.
+     *
+     * @return array<string, callable|class-string>
+     */
+    public function getCommands(): array
+    {
+        return $this->commands;
+    }
+
+    /**
+     * Get route introspection or set a router.
+     *
+     * @param RouteMatcherInterface|null $router
+     * @return ($router is null ? RouteExplorer : static)
+     */
+    public function routes(?RouteMatcherInterface $router = null): RouteExplorer|static
+    {
+        if ($router === null) {
+            return new RouteExplorer($this->router());
+        }
+
+        // Merge routes from provided router (used by BootstrapCache)
+        foreach ($router->getRoutes() as $method => $methodRoutes) {
+            foreach ($methodRoutes as $route) {
+                foreach ($this->middleware as $middleware) {
+                    $route->use($middleware);
+                }
+            }
+        }
+        $this->router = $router;
+
+        // Update container binding so RequestHandler gets the new router
+        $this->container->instance(RouteMatcherInterface::class, $router);
+
         return $this;
     }
 
@@ -474,6 +558,30 @@ class App
         }
 
         return $group;
+    }
+
+    /**
+     * Register a controller using attribute-based routing.
+     *
+     * @param class-string|object $controller
+     */
+    public function controller(string|object $controller): static
+    {
+        $loader = new Routing\RouteLoader($this->router());
+        $loader->registerController($controller);
+        return $this;
+    }
+
+    /**
+     * Register multiple controllers using attribute-based routing.
+     *
+     * @param array<class-string|object> $controllers
+     */
+    public function controllers(array $controllers): static
+    {
+        $loader = new Routing\RouteLoader($this->router());
+        $loader->registerControllers($controllers);
+        return $this;
     }
 
     /**
@@ -529,146 +637,23 @@ class App
     {
         $this->boot();
 
-        try {
-            $this->container->instance(Request::class, $request);
-
-            $match = $this->router()->match($request);
-
-            if (!$match->matched) {
-                $json = json_encode(['error' => 'Not Found']);
-                return new Response(
-                    $json !== false ? $json : '{"error": "Not Found"}',
-                    404,
-                    ['Content-Type' => 'application/json']
-                );
-            }
-
-            $route = $match->route;
-            // $match->route is guaranteed not null if matched is true based on Router logic,
-            // but PHPStan doesn't track that dependency unless we assert.
-            if ($route === null) {
-                // Should be unreachable given !$match->matched check above
-                throw new \RuntimeException('Route matched but route object is null');
-            }
-            $params = $match->params;
-
-            // Build middleware stack
-            $middlewareStack = $route->getMiddleware();
-
-            // Create the final handler - always returns a Response
-            $handler = fn (Request $req) => $this->prepareResponse(
-                $this->executeHandler($route->handler, $match->params, $req)
-            );
-
-            // Wrap handler with middleware
-            $pipeline = array_reduce(
-                array_reverse($middlewareStack),
-                fn ($next, $middleware) => fn (Request $req) => $this->executeMiddleware($middleware, $req, $next),
-                $handler
-            );
-
-            $result = $pipeline($request);
-            if (!$result instanceof Response) {
-                // Should have been prepared by prepareResponse
-                $content = is_scalar($result) || $result instanceof \Stringable ? (string) $result : '';
-                return new Response($content, 200);
-            }
-            return $result;
-        } finally {
-            $this->container->forgetScopedInstances();
-        }
-    }
-
-    /**
-     * @param array<string, mixed> $params
-     */
-    protected function executeHandler(mixed $handler, array $params, Request $request): mixed
-    {
-        // Closure
-        if ($handler instanceof Closure) {
-            return $this->container->call($handler, $params);
+        $handler = $this->container->resolve(RequestHandlerInterface::class);
+        if (!$handler instanceof RequestHandlerInterface) {
+            throw new \RuntimeException('Resolved service is not a RequestHandlerInterface');
         }
 
-        // [Controller::class, 'method']
-        if (is_array($handler)) {
-            [$class, $method] = $handler;
-            if (!is_string($class) || !is_string($method)) {
-                throw new \RuntimeException('Invalid array handler: expected [class, method]');
-            }
-            $classStr = $class;
-            $instance = $this->container->resolve($classStr);
-            $methodStr = $method; // is_string check passed
+        $response = $handler->handle($request);
 
-            $callback = [$instance, $methodStr];
-            if (!is_callable($callback)) {
-                throw new \RuntimeException("Method {$methodStr} not callable on resolved instance");
-            }
-            return $this->container->call($callback, $params);
+        // Ensure we return a Verge Response
+        if ($response instanceof Response) {
+            return $response;
         }
 
-        // Invokable class string
-        if (is_string($handler) && class_exists($handler)) {
-            $instance = $this->container->resolve($handler);
-            if (!is_callable($instance)) {
-                throw new \RuntimeException("Resolved handler {$handler} is not invokable");
-            }
-            return $this->container->call($instance, $params);
-        }
-
-        throw new \RuntimeException('Invalid route handler');
-    }
-
-    protected function executeMiddleware(callable|string|object $middleware, Request $request, callable $next): mixed
-    {
-        // Resolve class string through container
-        if (is_string($middleware)) {
-            $middleware = $this->container->resolve($middleware);
-        }
-
-        if (!is_callable($middleware)) {
-            throw new \RuntimeException('Middleware must be callable');
-        }
-
-        return $middleware($request, $next);
-    }
-
-    protected function prepareResponse(mixed $result): Response
-    {
-        // Already a Response
-        if ($result instanceof Response) {
-            return $result;
-        }
-
-        // Null -> 204 No Content
-        if ($result === null) {
-            return new Response('', 204);
-        }
-
-        // Array -> JSON
-        if (is_array($result)) {
-            $json = json_encode($result);
-            if ($json === false) {
-                throw new \RuntimeException('Failed to encode response to JSON: ' . json_last_error_msg());
-            }
-            return new Response(
-                $json,
-                200,
-                ['Content-Type' => 'application/json']
-            );
-        }
-
-        // String -> text/plain
-        if (is_string($result)) {
-            return new Response($result, 200, ['Content-Type' => 'text/plain']);
-        }
-
-        // Stringable object
-        // PHPStan strictly wants strict Stringable check before cast
-        if ($result instanceof \Stringable || (is_object($result) && method_exists($result, '__toString'))) {
-            return new Response((string) $result, 200, ['Content-Type' => 'text/plain']);
-        }
-
-        throw new \RuntimeException('Unable to convert handler result to response');
+        return new Response(
+            (string) $response->getBody(),
+            $response->getStatusCode(),
+            $response->getHeaders()
+        );
     }
 
     // Testing
@@ -690,27 +675,5 @@ class App
         }
 
         return $app;
-    }
-
-    /**
-     * @deprecated Use new App() or App::create() instead
-     */
-    public static function build(?callable $callback = null): static
-    {
-        $container = new Container();
-
-        if ($callback !== null) {
-            $callback($container);
-        }
-
-        return new static($container);
-    }
-
-    /**
-     * @deprecated Use new App() instead
-     */
-    public static function buildDefaults(): static
-    {
-        return new static();
     }
 }

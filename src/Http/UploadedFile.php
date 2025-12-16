@@ -16,23 +16,30 @@ class UploadedFile implements UploadedFileInterface
     private ?string $clientFilename;
     private ?string $clientMediaType;
     private bool $moved = false;
+    private ?string $streamContent = null;
 
     /**
      * @param array<string, mixed> $file
      */
-    public function __construct(array $file)
+    public function __construct(array $file, ?string $streamContent = null)
     {
         $this->tmpName = isset($file['tmp_name']) && (is_scalar($file['tmp_name']) || $file['tmp_name'] instanceof \Stringable) ? (string) $file['tmp_name'] : null;
         $this->size = isset($file['size']) && is_numeric($file['size']) ? (int) $file['size'] : null;
         $this->error = isset($file['error']) && is_numeric($file['error']) ? (int) $file['error'] : UPLOAD_ERR_OK;
         $this->clientFilename = isset($file['name']) && (is_scalar($file['name']) || $file['name'] instanceof \Stringable) ? (string) $file['name'] : null;
         $this->clientMediaType = isset($file['type']) && (is_scalar($file['type']) || $file['type'] instanceof \Stringable) ? (string) $file['type'] : null;
+        $this->streamContent = $streamContent;
     }
 
     public function getStream(): StreamInterface
     {
         if ($this->moved) {
             throw new RuntimeException('Uploaded file has already been moved');
+        }
+
+        // Return stream content if provided (from factory)
+        if ($this->streamContent !== null) {
+            return new StringStream($this->streamContent);
         }
 
         if ($this->tmpName === null) {

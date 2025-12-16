@@ -40,10 +40,10 @@ describe('App Lifecycle', function () {
             expect($count)->toBe(1);
         });
 
-        it('allows providers to register routes on app.ready', function () {
+        it('allows modules to register routes on app.ready', function () {
             $app = new App();
 
-            $app->configure(function ($app) {
+            $app->module(function ($app) {
                 $app->on('app.ready', function () use ($app) {
                     $app->get('/deferred', fn () => 'deferred route');
                 });
@@ -52,16 +52,16 @@ describe('App Lifecycle', function () {
             expect($app->test()->get('/deferred')->body())->toBe('deferred route');
         });
 
-        it('allows providers to use services registered by other providers', function () {
+        it('allows modules to use services registered by other modules', function () {
             $app = new App();
 
-            // First provider registers a service
-            $app->configure(function ($app) {
+            // First module registers a service
+            $app->module(function ($app) {
                 $app->singleton('greeting', fn () => 'Hello from service');
             });
 
-            // Second provider uses that service on app.ready
-            $app->configure(function ($app) {
+            // Second module uses that service on app.ready
+            $app->module(function ($app) {
                 $app->on('app.ready', function () use ($app) {
                     $greeting = $app->make('greeting');
                     $app->get('/greeting', fn () => $greeting);
@@ -89,18 +89,18 @@ describe('App Lifecycle', function () {
         });
     });
 
-    describe('configure() with app.ready pattern', function () {
-        it('supports class-based providers', function () {
+    describe('module() with app.ready pattern', function () {
+        it('supports class-based modules', function () {
             $app = new App();
-            $app->configure(TestLifecycleProvider::class);
+            $app->module(TestLifecycleModule::class);
 
-            expect($app->test()->get('/provider-route')->body())->toBe('from provider');
+            expect($app->test()->get('/module-route')->body())->toBe('from module');
         });
 
-        it('supports callable providers', function () {
+        it('supports closure modules', function () {
             $app = new App();
 
-            $app->configure(function ($app) {
+            $app->module(function ($app) {
                 $app->singleton('config.value', fn () => 42);
                 $app->on('app.ready', function () use ($app) {
                     $app->get('/config', fn () => (string) $app->make('config.value'));
@@ -114,17 +114,17 @@ describe('App Lifecycle', function () {
             $app = new App();
             $order = [];
 
-            $app->configure(function ($app) use (&$order) {
-                $order[] = 'provider1:bind';
+            $app->module(function ($app) use (&$order) {
+                $order[] = 'module1:bind';
                 $app->on('app.ready', function () use (&$order) {
-                    $order[] = 'provider1:ready';
+                    $order[] = 'module1:ready';
                 });
             });
 
-            $app->configure(function ($app) use (&$order) {
-                $order[] = 'provider2:bind';
+            $app->module(function ($app) use (&$order) {
+                $order[] = 'module2:bind';
                 $app->on('app.ready', function () use (&$order) {
-                    $order[] = 'provider2:ready';
+                    $order[] = 'module2:ready';
                 });
             });
 
@@ -132,23 +132,23 @@ describe('App Lifecycle', function () {
             $app->test()->get('/');
 
             expect($order)->toBe([
-                'provider1:bind',
-                'provider2:bind',
-                'provider1:ready',
-                'provider2:ready',
+                'module1:bind',
+                'module2:bind',
+                'module1:ready',
+                'module2:ready',
             ]);
         });
     });
 
 });
 
-// Test provider class
-class TestLifecycleProvider
+// Test module class
+class TestLifecycleModule
 {
     public function __invoke(App $app): void
     {
         $app->on('app.ready', function () use ($app) {
-            $app->get('/provider-route', fn () => 'from provider');
+            $app->get('/module-route', fn () => 'from module');
         });
     }
 }

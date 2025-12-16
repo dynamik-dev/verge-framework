@@ -11,7 +11,7 @@ describe('Request', function () {
 
     describe('constructor', function () {
         it('creates a request with default values', function () {
-            $request = new Request();
+            $request = Request::create();
 
             expect($request->method())->toBe('GET');
             expect($request->path())->toBe('/');
@@ -19,7 +19,7 @@ describe('Request', function () {
         });
 
         it('creates a request with custom values', function () {
-            $request = new Request(
+            $request = Request::create(
                 method: 'POST',
                 uri: '/users',
                 headers: ['Content-Type' => 'application/json'],
@@ -36,14 +36,14 @@ describe('Request', function () {
         });
 
         it('uppercases the HTTP method', function () {
-            $request = new Request(method: 'post');
+            $request = Request::create(method: 'post');
 
             expect($request->method())->toBe('POST');
         });
 
         it('accepts a Uri object', function () {
             $uri = new Uri('/api/users?id=1');
-            $request = new Request(uri: $uri);
+            $request = Request::create(uri: $uri);
 
             expect($request->path())->toBe('/api/users');
         });
@@ -53,19 +53,19 @@ describe('Request', function () {
 
         describe('json()', function () {
             it('parses JSON body', function () {
-                $request = new Request(body: '{"name":"John","age":30}');
+                $request = Request::create(body: '{"name":"John","age":30}');
 
                 expect($request->json())->toBe(['name' => 'John', 'age' => 30]);
             });
 
             it('returns empty array for null body', function () {
-                $request = new Request(body: null);
+                $request = Request::create(body: null);
 
                 expect($request->json())->toBe([]);
             });
 
             it('returns empty array for invalid JSON', function () {
-                $request = new Request(body: 'not json');
+                $request = Request::create(body: 'not json');
 
                 expect($request->json())->toBe([]);
             });
@@ -73,13 +73,13 @@ describe('Request', function () {
 
         describe('body()', function () {
             it('returns the raw body', function () {
-                $request = new Request(body: 'raw content');
+                $request = Request::create(body: 'raw content');
 
                 expect($request->body())->toBe('raw content');
             });
 
             it('returns null when no body', function () {
-                $request = new Request();
+                $request = Request::create();
 
                 expect($request->body())->toBeNull();
             });
@@ -87,19 +87,19 @@ describe('Request', function () {
 
         describe('input()', function () {
             it('returns value from parsed body', function () {
-                $request = new Request(parsedBody: ['name' => 'John']);
+                $request = Request::create(parsedBody: ['name' => 'John']);
 
                 expect($request->input('name'))->toBe('John');
             });
 
             it('falls back to query params', function () {
-                $request = new Request(query: ['page' => '2']);
+                $request = Request::create(query: ['page' => '2']);
 
                 expect($request->input('page'))->toBe('2');
             });
 
             it('prefers parsed body over query', function () {
-                $request = new Request(
+                $request = Request::create(
                     parsedBody: ['key' => 'body'],
                     query: ['key' => 'query']
                 );
@@ -108,13 +108,13 @@ describe('Request', function () {
             });
 
             it('returns default when key not found', function () {
-                $request = new Request();
+                $request = Request::create();
 
                 expect($request->input('missing', 'default'))->toBe('default');
             });
 
             it('returns null by default when key not found', function () {
-                $request = new Request();
+                $request = Request::create();
 
                 expect($request->input('missing'))->toBeNull();
             });
@@ -122,20 +122,20 @@ describe('Request', function () {
 
         describe('query()', function () {
             it('returns query parameter by key', function () {
-                $request = new Request(query: ['page' => '1', 'limit' => '10']);
+                $request = Request::create(query: ['page' => '1', 'limit' => '10']);
 
                 expect($request->query('page'))->toBe('1');
                 expect($request->query('limit'))->toBe('10');
             });
 
             it('returns all query parameters when no key provided', function () {
-                $request = new Request(query: ['page' => '1', 'limit' => '10']);
+                $request = Request::create(query: ['page' => '1', 'limit' => '10']);
 
                 expect($request->query())->toBe(['page' => '1', 'limit' => '10']);
             });
 
             it('returns default when key not found', function () {
-                $request = new Request();
+                $request = Request::create();
 
                 expect($request->query('missing', 'default'))->toBe('default');
             });
@@ -143,20 +143,20 @@ describe('Request', function () {
 
         describe('header()', function () {
             it('returns header value', function () {
-                $request = new Request(headers: ['Authorization' => 'Bearer token']);
+                $request = Request::create(headers: ['Authorization' => 'Bearer token']);
 
                 expect($request->header('Authorization'))->toBe('Bearer token');
             });
 
             it('is case-insensitive', function () {
-                $request = new Request(headers: ['Content-Type' => 'application/json']);
+                $request = Request::create(headers: ['Content-Type' => 'application/json']);
 
                 expect($request->header('content-type'))->toBe('application/json');
                 expect($request->header('CONTENT-TYPE'))->toBe('application/json');
             });
 
             it('returns null for missing header', function () {
-                $request = new Request();
+                $request = Request::create();
 
                 expect($request->header('X-Missing'))->toBeNull();
             });
@@ -164,7 +164,7 @@ describe('Request', function () {
 
         describe('headers()', function () {
             it('returns all headers', function () {
-                $request = new Request(headers: [
+                $request = Request::create(headers: [
                     'Content-Type' => 'application/json',
                     'Authorization' => 'Bearer token'
                 ]);
@@ -179,7 +179,7 @@ describe('Request', function () {
 
         describe('file()', function () {
             it('returns UploadedFile instance', function () {
-                $request = new Request(files: [
+                $request = Request::create(files: [
                     'avatar' => [
                         'name' => 'photo.jpg',
                         'type' => 'image/jpeg',
@@ -196,7 +196,7 @@ describe('Request', function () {
             });
 
             it('returns null for missing file', function () {
-                $request = new Request();
+                $request = Request::create();
 
                 expect($request->file('missing'))->toBeNull();
             });
@@ -204,7 +204,7 @@ describe('Request', function () {
 
         describe('method()', function () {
             it('returns the HTTP method', function () {
-                $request = new Request(method: 'DELETE');
+                $request = Request::create(method: 'DELETE');
 
                 expect($request->method())->toBe('DELETE');
             });
@@ -212,13 +212,13 @@ describe('Request', function () {
 
         describe('path()', function () {
             it('returns the request path', function () {
-                $request = new Request(uri: '/api/users/123');
+                $request = Request::create(uri: '/api/users/123');
 
                 expect($request->path())->toBe('/api/users/123');
             });
 
             it('returns path without query string', function () {
-                $request = new Request(uri: '/api/users?page=1');
+                $request = Request::create(uri: '/api/users?page=1');
 
                 expect($request->path())->toBe('/api/users');
             });
@@ -226,7 +226,7 @@ describe('Request', function () {
 
         describe('url()', function () {
             it('returns the full URL', function () {
-                $request = new Request(uri: 'https://example.com/api/users?page=1');
+                $request = Request::create(uri: 'https://example.com/api/users?page=1');
 
                 expect($request->url())->toBe('https://example.com/api/users?page=1');
             });
@@ -237,19 +237,19 @@ describe('Request', function () {
 
         describe('getRequestTarget()', function () {
             it('returns path for simple request', function () {
-                $request = new Request(uri: '/users');
+                $request = Request::create(uri: '/users');
 
                 expect($request->getRequestTarget())->toBe('/users');
             });
 
             it('includes query string', function () {
-                $request = new Request(uri: '/users?page=1');
+                $request = Request::create(uri: '/users?page=1');
 
                 expect($request->getRequestTarget())->toBe('/users?page=1');
             });
 
             it('returns / for empty path', function () {
-                $request = new Request(uri: '');
+                $request = Request::create(uri: '');
 
                 expect($request->getRequestTarget())->toBe('/');
             });
@@ -257,7 +257,7 @@ describe('Request', function () {
 
         describe('withRequestTarget()', function () {
             it('returns new instance with updated target', function () {
-                $request = new Request(uri: '/old');
+                $request = Request::create(uri: '/old');
                 $new = $request->withRequestTarget('/new');
 
                 expect($request->getRequestTarget())->toBe('/old');
@@ -267,7 +267,7 @@ describe('Request', function () {
 
         describe('getMethod()', function () {
             it('returns the HTTP method', function () {
-                $request = new Request(method: 'PUT');
+                $request = Request::create(method: 'PUT');
 
                 expect($request->getMethod())->toBe('PUT');
             });
@@ -275,7 +275,7 @@ describe('Request', function () {
 
         describe('withMethod()', function () {
             it('returns new instance with updated method', function () {
-                $request = new Request(method: 'GET');
+                $request = Request::create(method: 'GET');
                 $new = $request->withMethod('POST');
 
                 expect($request->getMethod())->toBe('GET');
@@ -283,7 +283,7 @@ describe('Request', function () {
             });
 
             it('uppercases the method', function () {
-                $request = new Request();
+                $request = Request::create();
                 $new = $request->withMethod('patch');
 
                 expect($new->getMethod())->toBe('PATCH');
@@ -292,7 +292,7 @@ describe('Request', function () {
 
         describe('getUri()', function () {
             it('returns Uri instance', function () {
-                $request = new Request(uri: '/api/users');
+                $request = Request::create(uri: '/api/users');
 
                 expect($request->getUri())->toBeInstanceOf(Uri::class);
                 expect($request->getUri()->getPath())->toBe('/api/users');
@@ -301,7 +301,7 @@ describe('Request', function () {
 
         describe('withUri()', function () {
             it('returns new instance with updated URI', function () {
-                $request = new Request(uri: '/old');
+                $request = Request::create(uri: '/old');
                 $newUri = new Uri('/new');
                 $new = $request->withUri($newUri);
 
@@ -315,7 +315,7 @@ describe('Request', function () {
 
         describe('getProtocolVersion()', function () {
             it('returns default protocol version', function () {
-                $request = new Request();
+                $request = Request::create();
 
                 expect($request->getProtocolVersion())->toBe('1.1');
             });
@@ -323,7 +323,7 @@ describe('Request', function () {
 
         describe('withProtocolVersion()', function () {
             it('returns new instance with updated version', function () {
-                $request = new Request();
+                $request = Request::create();
                 $new = $request->withProtocolVersion('2.0');
 
                 expect($request->getProtocolVersion())->toBe('1.1');
@@ -333,7 +333,7 @@ describe('Request', function () {
 
         describe('getHeaders()', function () {
             it('returns all headers as arrays', function () {
-                $request = new Request(headers: [
+                $request = Request::create(headers: [
                     'Content-Type' => 'application/json',
                     'Accept' => ['text/html', 'application/json']
                 ]);
@@ -347,14 +347,14 @@ describe('Request', function () {
 
         describe('hasHeader()', function () {
             it('returns true for existing header', function () {
-                $request = new Request(headers: ['Content-Type' => 'text/plain']);
+                $request = Request::create(headers: ['Content-Type' => 'text/plain']);
 
                 expect($request->hasHeader('Content-Type'))->toBeTrue();
                 expect($request->hasHeader('content-type'))->toBeTrue();
             });
 
             it('returns false for missing header', function () {
-                $request = new Request();
+                $request = Request::create();
 
                 expect($request->hasHeader('X-Missing'))->toBeFalse();
             });
@@ -362,13 +362,13 @@ describe('Request', function () {
 
         describe('getHeader()', function () {
             it('returns header values as array', function () {
-                $request = new Request(headers: ['Accept' => ['text/html', 'application/json']]);
+                $request = Request::create(headers: ['Accept' => ['text/html', 'application/json']]);
 
                 expect($request->getHeader('Accept'))->toBe(['text/html', 'application/json']);
             });
 
             it('returns empty array for missing header', function () {
-                $request = new Request();
+                $request = Request::create();
 
                 expect($request->getHeader('X-Missing'))->toBe([]);
             });
@@ -376,13 +376,13 @@ describe('Request', function () {
 
         describe('getHeaderLine()', function () {
             it('returns comma-separated header values', function () {
-                $request = new Request(headers: ['Accept' => ['text/html', 'application/json']]);
+                $request = Request::create(headers: ['Accept' => ['text/html', 'application/json']]);
 
                 expect($request->getHeaderLine('Accept'))->toBe('text/html, application/json');
             });
 
             it('returns empty string for missing header', function () {
-                $request = new Request();
+                $request = Request::create();
 
                 expect($request->getHeaderLine('X-Missing'))->toBe('');
             });
@@ -390,7 +390,7 @@ describe('Request', function () {
 
         describe('withHeader()', function () {
             it('returns new instance with header', function () {
-                $request = new Request();
+                $request = Request::create();
                 $new = $request->withHeader('X-Custom', 'value');
 
                 expect($request->hasHeader('X-Custom'))->toBeFalse();
@@ -398,14 +398,14 @@ describe('Request', function () {
             });
 
             it('replaces existing header', function () {
-                $request = new Request(headers: ['X-Custom' => 'old']);
+                $request = Request::create(headers: ['X-Custom' => 'old']);
                 $new = $request->withHeader('X-Custom', 'new');
 
                 expect($new->getHeader('x-custom'))->toBe(['new']);
             });
 
             it('accepts array of values', function () {
-                $request = new Request();
+                $request = Request::create();
                 $new = $request->withHeader('Accept', ['text/html', 'text/plain']);
 
                 expect($new->getHeader('accept'))->toBe(['text/html', 'text/plain']);
@@ -414,14 +414,14 @@ describe('Request', function () {
 
         describe('withAddedHeader()', function () {
             it('adds to existing header', function () {
-                $request = new Request(headers: ['Accept' => 'text/html']);
+                $request = Request::create(headers: ['Accept' => 'text/html']);
                 $new = $request->withAddedHeader('Accept', 'application/json');
 
                 expect($new->getHeader('accept'))->toBe(['text/html', 'application/json']);
             });
 
             it('creates header if not exists', function () {
-                $request = new Request();
+                $request = Request::create();
                 $new = $request->withAddedHeader('X-Custom', 'value');
 
                 expect($new->getHeader('x-custom'))->toBe(['value']);
@@ -430,7 +430,7 @@ describe('Request', function () {
 
         describe('withoutHeader()', function () {
             it('removes header', function () {
-                $request = new Request(headers: ['X-Custom' => 'value']);
+                $request = Request::create(headers: ['X-Custom' => 'value']);
                 $new = $request->withoutHeader('X-Custom');
 
                 expect($request->hasHeader('X-Custom'))->toBeTrue();
@@ -440,7 +440,7 @@ describe('Request', function () {
 
         describe('getBody()', function () {
             it('returns StringStream instance', function () {
-                $request = new Request(body: 'content');
+                $request = Request::create(body: 'content');
 
                 $body = $request->getBody();
 
@@ -449,7 +449,7 @@ describe('Request', function () {
             });
 
             it('returns empty stream for null body', function () {
-                $request = new Request();
+                $request = Request::create();
 
                 expect((string) $request->getBody())->toBe('');
             });
@@ -457,7 +457,7 @@ describe('Request', function () {
 
         describe('withBody()', function () {
             it('returns new instance with updated body', function () {
-                $request = new Request(body: 'old');
+                $request = Request::create(body: 'old');
                 $new = $request->withBody(new StringStream('new'));
 
                 expect($request->body())->toBe('old');
@@ -470,7 +470,7 @@ describe('Request', function () {
 
         describe('withParsedBody()', function () {
             it('returns new instance with parsed body', function () {
-                $request = new Request();
+                $request = Request::create();
                 $new = $request->withParsedBody(['name' => 'John']);
 
                 expect($request->input('name'))->toBeNull();
@@ -480,7 +480,7 @@ describe('Request', function () {
 
         describe('withQuery()', function () {
             it('returns new instance with query params', function () {
-                $request = new Request();
+                $request = Request::create();
                 $new = $request->withQuery(['page' => '1']);
 
                 expect($request->query('page'))->toBeNull();

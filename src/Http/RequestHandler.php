@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Verge\Http;
 
 use Closure;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Verge\Container;
 use Verge\Routing\RouteMatcherInterface;
 
@@ -15,8 +18,12 @@ class RequestHandler implements RequestHandlerInterface
     ) {
     }
 
-    public function handle(Request $request): Response
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
+        // Wrap in Verge Request if needed
+        if (!$request instanceof Request) {
+            $request = Request::wrap($request);
+        }
         try {
             $this->container->instance(Request::class, $request);
 
@@ -110,8 +117,35 @@ class RequestHandler implements RequestHandlerInterface
             $middleware = $this->container->resolve($middleware);
         }
 
+        // Support PSR-15 MiddlewareInterface
+        if ($middleware instanceof MiddlewareInterface) {
+            // Create a PSR-15 compatible request handler wrapper
+            /** @var callable $nextCallable */
+            $nextCallable = $next;
+            $handler = new class ($nextCallable) implements \Psr\Http\Server\RequestHandlerInterface {
+                /** @var callable */
+                private $next;
+
+                public function __construct(callable $next)
+                {
+                    $this->next = $next;
+                }
+
+                public function handle(ServerRequestInterface $request): ResponseInterface
+                {
+                    $result = ($this->next)($request instanceof Request ? $request : Request::wrap($request));
+                    if (!$result instanceof ResponseInterface) {
+                        return new Response((string) $result);
+                    }
+                    return $result;
+                }
+            };
+
+            return $middleware->process($request, $handler);
+        }
+
         if (!is_callable($middleware)) {
-            throw new \RuntimeException('Middleware must be callable');
+            throw new \RuntimeException('Middleware must be callable or implement MiddlewareInterface');
         }
 
         return $middleware($request, $next);

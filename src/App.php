@@ -626,7 +626,18 @@ class App
             throw new \RuntimeException('Resolved service is not a RequestHandlerInterface');
         }
 
-        return $handler->handle($request);
+        $response = $handler->handle($request);
+
+        // Ensure we return a Verge Response
+        if ($response instanceof Response) {
+            return $response;
+        }
+
+        return new Response(
+            (string) $response->getBody(),
+            $response->getStatusCode(),
+            $response->getHeaders()
+        );
     }
 
     // Testing

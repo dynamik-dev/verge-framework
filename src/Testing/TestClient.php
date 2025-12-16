@@ -107,7 +107,7 @@ class TestClient
         }
         $bodyString = $encoded;
 
-        $request = new Request(
+        $request = Request::create(
             method: $method,
             uri: $uri,
             headers: $headers,

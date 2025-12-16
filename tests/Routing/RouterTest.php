@@ -103,7 +103,7 @@ describe('Router', function () {
             $router = new Router();
             $router->add('GET', '/users', fn () => 'users');
 
-            $request = new Request('GET', '/users');
+            $request = Request::create('GET', '/users');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -116,7 +116,7 @@ describe('Router', function () {
             $router = new Router();
             $router->add('GET', '/users/{id}', fn () => 'user');
 
-            $request = new Request('GET', '/users/123');
+            $request = Request::create('GET', '/users/123');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -127,7 +127,7 @@ describe('Router', function () {
             $router = new Router();
             $router->add('GET', '/posts/{postId}/comments/{commentId}', fn () => 'comment');
 
-            $request = new Request('GET', '/posts/42/comments/99');
+            $request = Request::create('GET', '/posts/42/comments/99');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -138,7 +138,7 @@ describe('Router', function () {
             $router = new Router();
             $router->add('GET', '/users', fn () => 'users');
 
-            $request = new Request('GET', '/posts');
+            $request = Request::create('GET', '/posts');
             $match = $router->match($request);
 
             expect($match->matched)->toBeFalse();
@@ -149,7 +149,7 @@ describe('Router', function () {
             $router = new Router();
             $router->add('GET', '/users', fn () => 'users');
 
-            $request = new Request('POST', '/users');
+            $request = Request::create('POST', '/users');
             $match = $router->match($request);
 
             expect($match->matched)->toBeFalse();
@@ -159,7 +159,7 @@ describe('Router', function () {
             $router = new Router();
             $router->add('GET', '/users', fn () => 'users');
 
-            $request = new Request('GET', '/users/');
+            $request = Request::create('GET', '/users/');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -169,7 +169,7 @@ describe('Router', function () {
             $router = new Router();
             $router->add('GET', '/users', fn () => 'users');
 
-            $request = new Request('GET', 'users');
+            $request = Request::create('GET', 'users');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -179,7 +179,7 @@ describe('Router', function () {
             $router = new Router();
             $router->add('GET', '/', fn () => 'home');
 
-            $request = new Request('GET', '/');
+            $request = Request::create('GET', '/');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -190,7 +190,7 @@ describe('Router', function () {
             $router->add('GET', '/users/{id}', fn () => 'first');
             $router->add('GET', '/users/{userId}', fn () => 'second');
 
-            $request = new Request('GET', '/users/123');
+            $request = Request::create('GET', '/users/123');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -203,8 +203,8 @@ describe('Router', function () {
             $router->add('GET', '/users', fn () => 'list');
             $router->add('POST', '/users', fn () => 'create');
 
-            $getRequest = new Request('GET', '/users');
-            $postRequest = new Request('POST', '/users');
+            $getRequest = Request::create('GET', '/users');
+            $postRequest = Request::create('POST', '/users');
 
             $getMatch = $router->match($getRequest);
             $postMatch = $router->match($postRequest);
@@ -218,7 +218,7 @@ describe('Router', function () {
             $router = new Router();
             $router->add('GET', '/api/v1/users/{userId}/posts/{postId}/comments', fn () => 'comments');
 
-            $request = new Request('GET', '/api/v1/users/john/posts/hello-world/comments');
+            $request = Request::create('GET', '/api/v1/users/john/posts/hello-world/comments');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();

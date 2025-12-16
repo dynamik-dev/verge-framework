@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Verge\Events;
 
+use Psr\EventDispatcher\EventDispatcherInterface as PsrEventDispatcherInterface;
+use Psr\EventDispatcher\StoppableEventInterface;
 use Verge\Container;
 
-class EventDispatcher implements EventDispatcherInterface
+/**
+ * Event dispatcher supporting both string-based events and PSR-14 object events.
+ */
+class EventDispatcher implements EventDispatcherInterface, PsrEventDispatcherInterface
 {
     /** @var array<string, array<callable|string>> */
     protected array $listeners = [];
@@ -29,7 +34,34 @@ class EventDispatcher implements EventDispatcherInterface
     }
 
     /**
-     * Emit an event to all registered listeners.
+     * PSR-14: Dispatch an event object to all registered listeners.
+     *
+     * @template T of object
+     * @param T $event
+     * @return T
+     */
+    public function dispatch(object $event): object
+    {
+        $eventClass = $event::class;
+
+        // Get listeners for this event class and its parents/interfaces
+        $listeners = $this->getListenersForClass($eventClass);
+
+        foreach ($listeners as $listener) {
+            // Check if event propagation is stopped
+            if ($event instanceof StoppableEventInterface && $event->isPropagationStopped()) {
+                break;
+            }
+
+            $this->callObjectListener($listener, $event);
+        }
+
+        return $event;
+    }
+
+    /**
+     * Emit an event to all registered listeners (string-based API).
+     *
      * @param array<string, mixed> $payload
      */
     public function emit(string $event, array $payload = []): void
@@ -100,6 +132,59 @@ class EventDispatcher implements EventDispatcherInterface
         if (is_callable($listener)) {
             $listener($event, $payload);
         }
+    }
+
+    /**
+     * Call a listener with an event object (PSR-14 style).
+     */
+    protected function callObjectListener(callable|string $listener, object $event): void
+    {
+        // Resolve class string through container
+        if (is_string($listener)) {
+            $listener = $this->container->resolve($listener);
+        }
+
+        // Call listener with event object
+        if (is_callable($listener)) {
+            $listener($event);
+        }
+    }
+
+    /**
+     * Get all listeners that should receive an event of the given class.
+     *
+     * @return array<callable|string>
+     */
+    protected function getListenersForClass(string $eventClass): array
+    {
+        $listeners = [];
+
+        // Exact class match
+        if (isset($this->listeners[$eventClass])) {
+            $listeners = array_merge($listeners, $this->listeners[$eventClass]);
+        }
+
+        // Check parent classes
+        $parents = class_parents($eventClass);
+        if ($parents !== false) {
+            foreach ($parents as $parent) {
+                if (isset($this->listeners[$parent])) {
+                    $listeners = array_merge($listeners, $this->listeners[$parent]);
+                }
+            }
+        }
+
+        // Check interfaces
+        $interfaces = class_implements($eventClass);
+        if ($interfaces !== false) {
+            foreach ($interfaces as $interface) {
+                if (isset($this->listeners[$interface])) {
+                    $listeners = array_merge($listeners, $this->listeners[$interface]);
+                }
+            }
+        }
+
+        return $listeners;
     }
 
     protected function matchesWildcard(string $pattern, string $event): bool

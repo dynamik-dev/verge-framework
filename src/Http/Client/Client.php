@@ -257,7 +257,7 @@ class Client implements ClientInterface
             }
         }
 
-        return new Request($method, $uri, $headers, $bodyString);
+        return Request::create($method, $uri, $headers, $bodyString);
     }
 
     /**

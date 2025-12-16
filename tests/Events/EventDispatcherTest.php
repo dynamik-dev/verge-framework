@@ -235,6 +235,166 @@ describe('EventDispatcher', function () {
 
 });
 
+describe('PSR-14 dispatch()', function () {
+    it('dispatches object events to listeners', function () {
+        $container = new Container();
+        $dispatcher = new EventDispatcher($container);
+        $received = null;
+
+        $event = new class () {
+            public string $message = 'hello';
+        };
+
+        $dispatcher->on($event::class, function ($e) use (&$received) {
+            $received = $e;
+        });
+
+        $result = $dispatcher->dispatch($event);
+
+        expect($received)->toBe($event);
+        expect($result)->toBe($event);
+    });
+
+    it('returns the event object', function () {
+        $container = new Container();
+        $dispatcher = new EventDispatcher($container);
+
+        $event = new class () {
+            public bool $handled = false;
+        };
+
+        $dispatcher->on($event::class, function ($e) {
+            $e->handled = true;
+        });
+
+        $result = $dispatcher->dispatch($event);
+
+        expect($result)->toBe($event);
+        expect($result->handled)->toBeTrue();
+    });
+
+    it('respects StoppableEventInterface', function () {
+        $container = new Container();
+        $dispatcher = new EventDispatcher($container);
+        $calls = [];
+
+        $event = new class () implements \Psr\EventDispatcher\StoppableEventInterface {
+            public bool $stopped = false;
+
+            public function isPropagationStopped(): bool
+            {
+                return $this->stopped;
+            }
+
+            public function stopPropagation(): void
+            {
+                $this->stopped = true;
+            }
+        };
+
+        $dispatcher->on($event::class, function ($e) use (&$calls) {
+            $calls[] = 'first';
+            $e->stopPropagation();
+        });
+        $dispatcher->on($event::class, function ($e) use (&$calls) {
+            $calls[] = 'second';
+        });
+
+        $dispatcher->dispatch($event);
+
+        expect($calls)->toBe(['first']);
+    });
+
+    it('calls listeners for parent classes', function () {
+        $container = new Container();
+        $dispatcher = new EventDispatcher($container);
+        $calls = [];
+
+        // Create a parent and child event
+        $parentClass = new class () {
+            public string $type = 'parent';
+        };
+
+        $dispatcher->on($parentClass::class, function ($e) use (&$calls) {
+            $calls[] = 'parent';
+        });
+
+        $dispatcher->dispatch($parentClass);
+
+        expect($calls)->toBe(['parent']);
+    });
+
+    it('calls listeners for implemented interfaces', function () {
+        $container = new Container();
+        $dispatcher = new EventDispatcher($container);
+        $calls = [];
+
+        $event = new class () implements \Psr\EventDispatcher\StoppableEventInterface {
+            public function isPropagationStopped(): bool
+            {
+                return false;
+            }
+        };
+
+        // Register listener for the interface
+        $dispatcher->on(\Psr\EventDispatcher\StoppableEventInterface::class, function ($e) use (&$calls) {
+            $calls[] = 'interface';
+        });
+
+        $dispatcher->dispatch($event);
+
+        expect($calls)->toBe(['interface']);
+    });
+
+    it('calls exact class and interface listeners', function () {
+        $container = new Container();
+        $dispatcher = new EventDispatcher($container);
+        $calls = [];
+
+        $event = new class () implements \Psr\EventDispatcher\StoppableEventInterface {
+            public function isPropagationStopped(): bool
+            {
+                return false;
+            }
+        };
+
+        $dispatcher->on($event::class, function ($e) use (&$calls) {
+            $calls[] = 'exact';
+        });
+        $dispatcher->on(\Psr\EventDispatcher\StoppableEventInterface::class, function ($e) use (&$calls) {
+            $calls[] = 'interface';
+        });
+
+        $dispatcher->dispatch($event);
+
+        expect($calls)->toBe(['exact', 'interface']);
+    });
+
+    it('resolves class string listeners through container', function () {
+        $container = new Container();
+        $dispatcher = new EventDispatcher($container);
+
+        $event = new class () {
+            public ?object $listener = null;
+        };
+
+        // Create listener class that records itself
+        $listenerClass = new class () {
+            public function __invoke(object $event): void
+            {
+                $event->listener = $this;
+            }
+        };
+
+        $container->bind($listenerClass::class, fn () => $listenerClass);
+        $dispatcher->on($event::class, $listenerClass::class);
+
+        $dispatcher->dispatch($event);
+
+        expect($event->listener)->toBe($listenerClass);
+    });
+});
+
 describe('App Events Integration', function () {
 
     describe('App::on()', function () {

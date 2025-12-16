@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Verge;
 
 use Verge\Cache\CacheModule;
+use Verge\Clock\ClockModule;
 use Verge\Config\ConfigModule;
 use Verge\Env\EnvModule;
 use Verge\Events\EventsModule;
@@ -24,6 +25,7 @@ class AppBuilder
             EventsModule::class,
             CacheModule::class,
             LogModule::class,
+            ClockModule::class,
         ]);
     }
 }

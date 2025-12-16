@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Verge\Routing;
 
 use Psr\Http\Message\RequestInterface;
+use Verge\Routing\Exceptions\RouteNotFoundException;
 
-class Router implements RouterInterface
+class Router implements RouterInterface, RouteMatcherInterface
 {
     /** @var array<string, Route[]> */
     protected array $routes = [];
@@ -59,11 +60,13 @@ class Router implements RouterInterface
      */
     public function any(string $path, callable|array|string $handler): Route
     {
-        $route = null;
-        foreach (['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as $method) {
-            $route = $this->add($method, $path, $handler);
-        }
-        /** @var Route $route */
+        $route = new Route(
+            methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+            path: $path,
+            handler: $handler
+        );
+
+        $this->register($route);
         return $route;
     }
 
@@ -72,18 +75,14 @@ class Router implements RouterInterface
      */
     public function add(string $method, string $path, callable|array|string $handler): Route
     {
-        $method = strtoupper($method);
-        [$pattern, $paramNames] = $this->compilePath($path);
+        $route = new Route(
+            methods: [strtoupper($method)],
+            path: $path,
+            handler: $handler
+        );
 
-        $route = new Route($method, $path, $handler, $pattern, $paramNames);
-
-        if (!isset($this->routes[$method])) {
-            $this->routes[$method] = [];
-        }
-
-        $this->routes[$method][] = $route;
-
-        return $route;
+        $routes = $this->register($route);
+        return $routes[0];
     }
 
     public function match(RequestInterface $request): RouteMatch
@@ -114,58 +113,7 @@ class Router implements RouterInterface
      */
     protected function compilePath(string $path): array
     {
-        $paramNames = [];
-        $pattern = $path;
-
-        // Parse parameters manually to handle nested braces in constraints
-        $offset = 0;
-        while (preg_match('/\{([a-zA-Z_][a-zA-Z0-9_]*)(\?)?(?::)?/', $pattern, $match, PREG_OFFSET_CAPTURE, $offset)) {
-            $fullMatchStart = $match[0][1];
-            $paramName = $match[1][0];
-            // Check if the parameter part contains a '?'
-            $isOptional = isset($match[2][0]);
-
-            // Find the closing brace, accounting for nested braces in constraint
-            $braceDepth = 1;
-            $pos = $fullMatchStart + strlen($match[0][0]);
-            while ($pos < strlen($pattern) && $braceDepth > 0) {
-                if ($pattern[$pos] === '{') {
-                    $braceDepth++;
-                } elseif ($pattern[$pos] === '}') {
-                    $braceDepth--;
-                }
-                $pos++;
-            }
-
-            $fullMatchEnd = $pos;
-            $fullMatch = substr($pattern, $fullMatchStart, $fullMatchEnd - $fullMatchStart);
-
-            // Extract constraint if present
-            $constraint = '[^/]+';
-            if (preg_match('/\{[^:}]+\??(:.+)\}$/', $fullMatch, $constraintMatch)) {
-                $constraint = substr($constraintMatch[1], 1); // Remove leading ':'
-            }
-
-            $paramNames[] = $paramName;
-
-            // For optional parameters, include the preceding slash in the optional group
-            $replaceStart = $fullMatchStart;
-            if ($isOptional && $fullMatchStart > 0 && $pattern[$fullMatchStart - 1] === '/') {
-                $replaceStart = $fullMatchStart - 1;
-                $replacement = "(?:/($constraint))?";
-            } elseif ($isOptional) {
-                $replacement = "(?:/($constraint))?";
-            } else {
-                $replacement = "($constraint)";
-            }
-
-            $pattern = substr($pattern, 0, $replaceStart) . $replacement . substr($pattern, $fullMatchEnd);
-            $offset = $replaceStart + strlen($replacement);
-        }
-
-        $pattern = '#^' . $pattern . '$#';
-
-        return [$pattern, $paramNames];
+        return PathParser::compile($path);
     }
 
     /**
@@ -275,5 +223,42 @@ class Router implements RouterInterface
         }
 
         return $result;
+    }
+
+    /**
+     * @return Route[]
+     */
+    public function register(Route $route): array
+    {
+        $routes = [];
+
+        // Ensure path is compiled
+        if ($route->pattern === null) {
+            [$pattern, $paramNames] = $this->compilePath($route->path);
+            $route->pattern = $pattern;
+            $route->paramNames = $paramNames;
+        }
+
+        foreach ($route->methods as $method) {
+            $method = strtoupper($method);
+
+            if (!isset($this->routes[$method])) {
+                $this->routes[$method] = [];
+            }
+
+            // We store the same route instance for multiple methods
+            // This is efficient and allows RouteInfo to see all supported methods.
+            $this->routes[$method][] = $route;
+
+            if ($route->getName() !== null) {
+                // Warning: registering the same name for multiple methods might cause conflicts
+                // in namedRoutes map if not handled carefully.
+                $this->registerNamedRoute($route->getName(), $route);
+            }
+
+            $routes[] = $route;
+        }
+
+        return $routes;
     }
 }

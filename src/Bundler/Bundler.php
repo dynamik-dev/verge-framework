@@ -275,7 +275,7 @@ PHP;
         }
 
         // Generate class name from route
-        $className = $this->generator->generateClassName($route->method, $route->path);
+        $className = $this->generator->generateClassName($route->methods[0], $route->path);
 
         // Generate class content
         $content = $this->generator->generate($className, $closureInfo);

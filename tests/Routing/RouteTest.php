@@ -10,14 +10,14 @@ describe('Route', function () {
         it('creates a route with all properties', function () {
             $handler = fn () => 'hello';
             $route = new Route(
-                method: 'GET',
+                methods: ['GET'],
                 path: '/users/{id}',
                 handler: $handler,
                 pattern: '#^/users/([^/]+)$#',
                 paramNames: ['id']
             );
 
-            expect($route->method)->toBe('GET');
+            expect($route->methods)->toBe(['GET']);
             expect($route->path)->toBe('/users/{id}');
             expect($route->handler)->toBe($handler);
             expect($route->pattern)->toBe('#^/users/([^/]+)$#');
@@ -26,7 +26,7 @@ describe('Route', function () {
 
         it('defaults paramNames to empty array', function () {
             $route = new Route(
-                method: 'GET',
+                methods: ['GET'],
                 path: '/',
                 handler: fn () => 'home',
                 pattern: '#^/$#'
@@ -38,7 +38,7 @@ describe('Route', function () {
 
     describe('use()', function () {
         it('adds middleware to the route', function () {
-            $route = new Route('GET', '/', fn () => 'hello', '#^/$#');
+            $route = new Route(['GET'], '/', fn () => 'hello', '#^/$#');
             $middleware = fn ($req, $next) => $next($req);
 
             $result = $route->use($middleware);
@@ -48,7 +48,7 @@ describe('Route', function () {
         });
 
         it('adds multiple middleware in order', function () {
-            $route = new Route('GET', '/', fn () => 'hello', '#^/$#');
+            $route = new Route(['GET'], '/', fn () => 'hello', '#^/$#');
             $first = fn ($req, $next) => $next($req);
             $second = fn ($req, $next) => $next($req);
             $third = 'SomeMiddleware';
@@ -59,7 +59,7 @@ describe('Route', function () {
         });
 
         it('accepts string middleware', function () {
-            $route = new Route('GET', '/', fn () => 'hello', '#^/$#');
+            $route = new Route(['GET'], '/', fn () => 'hello', '#^/$#');
 
             $route->use('AuthMiddleware');
 
@@ -69,13 +69,13 @@ describe('Route', function () {
 
     describe('getMiddleware()', function () {
         it('returns empty array by default', function () {
-            $route = new Route('GET', '/', fn () => 'hello', '#^/$#');
+            $route = new Route(['GET'], '/', fn () => 'hello', '#^/$#');
 
             expect($route->getMiddleware())->toBe([]);
         });
 
         it('returns all added middleware', function () {
-            $route = new Route('GET', '/', fn () => 'hello', '#^/$#');
+            $route = new Route(['GET'], '/', fn () => 'hello', '#^/$#');
             $route->use('First')->use('Second');
 
             expect($route->getMiddleware())->toBe(['First', 'Second']);
@@ -84,7 +84,7 @@ describe('Route', function () {
 
     describe('matches()', function () {
         it('matches exact path', function () {
-            $route = new Route('GET', '/', fn () => 'home', '#^/$#');
+            $route = new Route(['GET'], '/', fn () => 'home', '#^/$#');
 
             expect($route->matches('/'))->toBe([]);
             expect($route->matches('/other'))->toBeNull();
@@ -92,7 +92,7 @@ describe('Route', function () {
 
         it('matches path with single parameter', function () {
             $route = new Route(
-                'GET',
+                ['GET'],
                 '/users/{id}',
                 fn () => 'user',
                 '#^/users/([^/]+)$#',
@@ -107,7 +107,7 @@ describe('Route', function () {
 
         it('matches path with multiple parameters', function () {
             $route = new Route(
-                'GET',
+                ['GET'],
                 '/posts/{postId}/comments/{commentId}',
                 fn () => 'comment',
                 '#^/posts/([^/]+)/comments/([^/]+)$#',
@@ -120,7 +120,7 @@ describe('Route', function () {
         });
 
         it('returns null for non-matching path', function () {
-            $route = new Route('GET', '/users', fn () => 'users', '#^/users$#');
+            $route = new Route(['GET'], '/users', fn () => 'users', '#^/users$#');
 
             expect($route->matches('/posts'))->toBeNull();
             expect($route->matches('/users/123'))->toBeNull();
@@ -129,7 +129,7 @@ describe('Route', function () {
 
         it('matches complex patterns', function () {
             $route = new Route(
-                'GET',
+                ['GET'],
                 '/api/v1/users/{userId}/posts/{postId}',
                 fn () => 'post',
                 '#^/api/v1/users/([^/]+)/posts/([^/]+)$#',

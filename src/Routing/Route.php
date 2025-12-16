@@ -12,13 +12,16 @@ class Route
 
     protected ?string $name = null;
 
+    /**
+     * @param array<string> $methods
+     * @param array<string> $paramNames
+     */
     public function __construct(
-        public readonly string $method,
+        public readonly array $methods,
         public readonly string $path,
         public readonly mixed $handler,
-        public readonly string $pattern,
-        /** @var string[] */
-        public readonly array $paramNames = []
+        public ?string $pattern = null,
+        public array $paramNames = []
     ) {
     }
 
@@ -38,6 +41,10 @@ class Route
      */
     public function matches(string $path): ?array
     {
+        if ($this->pattern === null) {
+            return null;
+        }
+
         if (preg_match($this->pattern, $path, $matches)) {
             $params = [];
             foreach ($this->paramNames as $index => $name) {

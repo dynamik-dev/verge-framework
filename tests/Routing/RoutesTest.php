@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Verge\App;
-use Verge\Routing\RouteInfo;
-use Verge\Routing\Routes;
+use Verge\Routing\Explorer\RouteExplorer;
+use Verge\Routing\Explorer\RouteInfo;
 
 // Test controller for handler extraction
 class TestRoutesController
@@ -38,7 +38,7 @@ class TestRoutesMiddleware
     }
 }
 
-describe('Routes', function () {
+describe('RouteExplorer', function () {
 
     describe('all()', function () {
         it('extracts all routes', function () {
@@ -171,9 +171,9 @@ describe('RouteInfo', function () {
             $route = $app->routes()->all()[0];
 
             expect($route->params)->toHaveCount(1);
-            expect($route->params[0]['name'])->toBe('id');
-            expect($route->params[0]['required'])->toBeTrue();
-            expect($route->params[0]['constraint'])->toBeNull();
+            expect($route->params[0]->name)->toBe('id');
+            expect($route->params[0]->required)->toBeTrue();
+            expect($route->params[0]->constraint)->toBeNull();
         });
 
         it('extracts optional parameters', function () {
@@ -182,8 +182,8 @@ describe('RouteInfo', function () {
 
             $route = $app->routes()->all()[0];
 
-            expect($route->params[0]['name'])->toBe('year');
-            expect($route->params[0]['required'])->toBeFalse();
+            expect($route->params[0]->name)->toBe('year');
+            expect($route->params[0]->required)->toBeFalse();
         });
 
         it('extracts parameter constraints', function () {
@@ -192,7 +192,7 @@ describe('RouteInfo', function () {
 
             $route = $app->routes()->all()[0];
 
-            expect($route->params[0]['constraint'])->toBe('\d+');
+            expect($route->params[0]->constraint)->toBe('\d+');
         });
 
         it('extracts constraints with nested braces', function () {
@@ -201,8 +201,8 @@ describe('RouteInfo', function () {
 
             $route = $app->routes()->all()[0];
 
-            expect($route->params[0]['name'])->toBe('year');
-            expect($route->params[0]['constraint'])->toBe('\d{4}');
+            expect($route->params[0]->name)->toBe('year');
+            expect($route->params[0]->constraint)->toBe('\d{4}');
         });
 
         it('extracts optional parameters with constraints', function () {
@@ -211,9 +211,9 @@ describe('RouteInfo', function () {
 
             $route = $app->routes()->all()[0];
 
-            expect($route->params[0]['name'])->toBe('year');
-            expect($route->params[0]['required'])->toBeFalse();
-            expect($route->params[0]['constraint'])->toBe('\d{4}');
+            expect($route->params[0]->name)->toBe('year');
+            expect($route->params[0]->required)->toBeFalse();
+            expect($route->params[0]->constraint)->toBe('\d{4}');
         });
 
         it('extracts multiple parameters', function () {
@@ -223,8 +223,8 @@ describe('RouteInfo', function () {
             $route = $app->routes()->all()[0];
 
             expect($route->params)->toHaveCount(2);
-            expect($route->params[0]['name'])->toBe('postId');
-            expect($route->params[1]['name'])->toBe('commentId');
+            expect($route->params[0]->name)->toBe('postId');
+            expect($route->params[1]->name)->toBe('commentId');
         });
     });
 
@@ -331,21 +331,11 @@ describe('RouteInfo', function () {
 
 describe('App::routes() integration', function () {
 
-    it('returns Routes instance when called with no arguments', function () {
+    it('returns RouteExplorer instance when called with no arguments', function () {
         $app = new App();
         $app->get('/test', fn () => 'test');
 
-        expect($app->routes())->toBeInstanceOf(Routes::class);
-    });
-
-    it('still configures routes when passed callable', function () {
-        $app = new App();
-        $app->routes(function ($router) {
-            $router->get('/configured', fn () => 'configured');
-        });
-
-        expect($app->routes()->count())->toBe(1);
-        expect($app->routes()->all()[0]->path)->toBe('/configured');
+        expect($app->routes())->toBeInstanceOf(RouteExplorer::class);
     });
 
     it('works with route groups', function () {

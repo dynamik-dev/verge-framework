@@ -26,30 +26,17 @@ class Container implements ContainerInterface
     /** @var array<string, bool> */
     protected array $scopedBindings = [];
 
+    /** @var array<string, array<string, Closure>> */
+    protected array $contextualBindings = [];
+
+    /** @var array{abstract: string, concrete: Closure}|null */
+    protected ?array $pendingBinding = null;
+
+    /** @var string[] */
+    protected array $buildStack = [];
+
     /** @var array<string, array{instantiable: bool, constructor: ?array<int, array{name: string, type: ?string, builtin: bool, hasDefault: bool, default: mixed}>}>|null */
     protected ?array $reflectionCache = null;
-
-    public function defaults(): static
-    {
-        if (!$this->has(Routing\RouterInterface::class)) {
-            $this->singleton(Routing\RouterInterface::class, fn () => new Routing\Router());
-        }
-        if (!$this->has(Env::class)) {
-            $this->singleton(Env::class, fn () => new Env());
-        }
-        if (!$this->has(Events\EventDispatcher::class)) {
-            $this->singleton(Events\EventDispatcher::class, fn ($c) => new Events\EventDispatcher($c));
-        }
-        // Note: CacheInterface and LoggerInterface are now wired via App::driver()
-        // These fallbacks exist only for backwards compatibility when container is used standalone
-        if (!$this->has(Cache\CacheInterface::class)) {
-            $this->singleton(Cache\CacheInterface::class, fn () => new Cache\Drivers\MemoryCacheDriver());
-        }
-        if (!$this->has(Log\LoggerInterface::class)) {
-            $this->singleton(Log\LoggerInterface::class, fn () => new Log\Drivers\StreamLogDriver());
-        }
-        return $this;
-    }
 
     public function bind(string $abstract, Closure|string $concrete): static
     {
@@ -58,7 +45,52 @@ class Container implements ContainerInterface
         }
 
         $this->bindings[$abstract] = $concrete;
+        $this->pendingBinding = ['abstract' => $abstract, 'concrete' => $concrete];
+
         return $this;
+    }
+
+    /**
+     * Make the preceding binding contextual for specific classes.
+     *
+     * @param string|string[] $contexts
+     */
+    public function for(string|array $contexts): static
+    {
+        if ($this->pendingBinding === null) {
+            throw new ContainerException('Cannot call for() without a preceding bind(), singleton(), or instance() call');
+        }
+
+        $abstract = $this->pendingBinding['abstract'];
+        $concrete = $this->pendingBinding['concrete'];
+
+        $contexts = is_array($contexts) ? $contexts : [$contexts];
+
+        foreach ($contexts as $context) {
+            $this->contextualBindings[$abstract][$context] = $concrete;
+        }
+
+        // Remove from default bindings - this binding is contextual only
+        unset($this->bindings[$abstract]);
+        unset($this->singletons[$abstract]);
+
+        $this->pendingBinding = null;
+
+        return $this;
+    }
+
+    /**
+     * Get a contextual binding if one exists for the current build context.
+     */
+    protected function getContextualConcrete(string $abstract): ?Closure
+    {
+        if (empty($this->buildStack) || !isset($this->contextualBindings[$abstract])) {
+            return null;
+        }
+
+        $context = end($this->buildStack);
+
+        return $this->contextualBindings[$abstract][$context] ?? null;
     }
 
     public function singleton(string $abstract, Closure|string $concrete): static
@@ -122,26 +154,32 @@ class Container implements ContainerInterface
             throw new ContainerException("Class {$class} does not exist");
         }
 
-        // Try to use cached reflection data
-        if ($this->reflectionCache !== null && isset($this->reflectionCache[$class])) {
-            return $this->buildFromCache($class, $parameters);
+        $this->buildStack[] = $class;
+
+        try {
+            // Try to use cached reflection data
+            if ($this->reflectionCache !== null && isset($this->reflectionCache[$class])) {
+                return $this->buildFromCache($class, $parameters);
+            }
+
+            $reflector = new ReflectionClass($class);
+
+            if (!$reflector->isInstantiable()) {
+                throw new ContainerException("Class {$class} is not instantiable");
+            }
+
+            $constructor = $reflector->getConstructor();
+
+            if ($constructor === null) {
+                return new $class();
+            }
+
+            $dependencies = $this->resolveDependencies($constructor->getParameters(), $parameters);
+
+            return $reflector->newInstanceArgs($dependencies);
+        } finally {
+            array_pop($this->buildStack);
         }
-
-        $reflector = new ReflectionClass($class);
-
-        if (!$reflector->isInstantiable()) {
-            throw new ContainerException("Class {$class} is not instantiable");
-        }
-
-        $constructor = $reflector->getConstructor();
-
-        if ($constructor === null) {
-            return new $class();
-        }
-
-        $dependencies = $this->resolveDependencies($constructor->getParameters(), $parameters);
-
-        return $reflector->newInstanceArgs($dependencies);
     }
 
     /**
@@ -191,7 +229,13 @@ class Container implements ContainerInterface
 
             // Check if we can resolve by type
             if ($param['type'] !== null && !$param['builtin']) {
-                $dependencies[] = $this->resolve($param['type']);
+                // Check for contextual binding first
+                $contextual = $this->getContextualConcrete($param['type']);
+                if ($contextual !== null) {
+                    $dependencies[] = $contextual($this);
+                } else {
+                    $dependencies[] = $this->resolve($param['type']);
+                }
             } elseif ($param['hasDefault']) {
                 $dependencies[] = $param['default'];
             } else {
@@ -243,7 +287,15 @@ class Container implements ContainerInterface
             $type = $param->getType();
 
             if ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
-                $dependencies[] = $this->resolve($type->getName());
+                $typeName = $type->getName();
+
+                // Check for contextual binding first
+                $contextual = $this->getContextualConcrete($typeName);
+                if ($contextual !== null) {
+                    $dependencies[] = $contextual($this);
+                } else {
+                    $dependencies[] = $this->resolve($typeName);
+                }
             } elseif ($param->isDefaultValueAvailable()) {
                 $dependencies[] = $param->getDefaultValue();
             } else {
@@ -277,38 +329,9 @@ class Container implements ContainerInterface
             throw new ContainerException('Cannot resolve callable');
         }
 
-        $args = $this->resolveCallableParameters($reflection->getParameters(), $parameters);
+        $args = $this->resolveDependencies($reflection->getParameters(), $parameters);
 
         return $callback(...$args);
-    }
-
-    /**
-     * @param ReflectionParameter[] $reflectionParams
-     * @param array<string, mixed> $providedParams
-     * @return array<mixed>
-     */
-    protected function resolveCallableParameters(array $reflectionParams, array $providedParams): array
-    {
-        $args = [];
-
-        foreach ($reflectionParams as $param) {
-            $name = $param->getName();
-            $type = $param->getType();
-
-            if (array_key_exists($name, $providedParams)) {
-                $args[] = $providedParams[$name];
-            } elseif ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
-                $args[] = $this->resolve($type->getName());
-            } elseif ($param->isDefaultValueAvailable()) {
-                $args[] = $param->getDefaultValue();
-            } else {
-                throw new ContainerException(
-                    "Cannot resolve parameter \${$name}"
-                );
-            }
-        }
-
-        return $args;
     }
 
     public function instance(string $abstract, mixed $instance): static

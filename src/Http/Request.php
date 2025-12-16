@@ -8,6 +8,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 use Verge\Concerns\HasHeaders;
+use Verge\Routing\UrlSigner;
 
 class Request implements RequestInterface
 {
@@ -174,6 +175,47 @@ class Request implements RequestInterface
     public function url(): string
     {
         return (string) $this->uri;
+    }
+
+    /**
+     * Check if the request has a valid signature.
+     */
+    public function hasValidSignature(?UrlSigner $signer = null): bool
+    {
+        if ($signer === null) {
+            /** @var UrlSigner $signer */
+            $signer = app()->make(UrlSigner::class);
+        }
+
+        return $signer->verify($this->fullUrl());
+    }
+
+    /**
+     * Get the full URL including scheme, host, and query string.
+     */
+    public function fullUrl(): string
+    {
+        $uri = $this->uri;
+        $url = '';
+
+        if ($uri->getScheme() !== '') {
+            $url .= $uri->getScheme() . '://';
+        }
+
+        if ($uri->getHost() !== '') {
+            $url .= $uri->getHost();
+            if ($uri->getPort() !== null) {
+                $url .= ':' . $uri->getPort();
+            }
+        }
+
+        $url .= $uri->getPath() ?: '/';
+
+        if ($uri->getQuery() !== '') {
+            $url .= '?' . $uri->getQuery();
+        }
+
+        return $url;
     }
 
     // PSR-7 RequestInterface methods

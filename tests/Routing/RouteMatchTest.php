@@ -9,7 +9,7 @@ describe('RouteMatch', function () {
 
     describe('constructor', function () {
         it('creates a matched result', function () {
-            $route = new Route('GET', '/', fn () => 'home', '#^/$#');
+            $route = new Route(['GET'], '/', fn () => 'home', '#^/$#');
             $match = new RouteMatch(true, $route, ['id' => '123']);
 
             expect($match->matched)->toBeTrue();
@@ -32,7 +32,7 @@ describe('RouteMatch', function () {
         });
 
         it('defaults params to empty array', function () {
-            $route = new Route('GET', '/', fn () => 'home', '#^/$#');
+            $route = new Route(['GET'], '/', fn () => 'home', '#^/$#');
             $match = new RouteMatch(true, $route);
 
             expect($match->params)->toBe([]);
@@ -58,7 +58,7 @@ describe('RouteMatch', function () {
 
     describe('found()', function () {
         it('creates matched result with route', function () {
-            $route = new Route('GET', '/users', fn () => 'users', '#^/users$#');
+            $route = new Route(['GET'], '/users', fn () => 'users', '#^/users$#');
             $match = RouteMatch::found($route);
 
             expect($match->matched)->toBeTrue();
@@ -67,7 +67,7 @@ describe('RouteMatch', function () {
         });
 
         it('creates matched result with params', function () {
-            $route = new Route('GET', '/users/{id}', fn () => 'user', '#^/users/([^/]+)$#', ['id']);
+            $route = new Route(['GET'], '/users/{id}', fn () => 'user', '#^/users/([^/]+)$#', ['id']);
             $match = RouteMatch::found($route, ['id' => '42']);
 
             expect($match->matched)->toBeTrue();
@@ -77,7 +77,7 @@ describe('RouteMatch', function () {
 
         it('creates matched result with multiple params', function () {
             $route = new Route(
-                'GET',
+                ['GET'],
                 '/posts/{postId}/comments/{commentId}',
                 fn () => 'comment',
                 '#^/posts/([^/]+)/comments/([^/]+)$#',

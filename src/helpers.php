@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Verge {
 
+    use Verge\Http\Client\Client;
     use Verge\Http\Response;
+    use Verge\Http\Response\DownloadResponse;
+    use Verge\Http\Response\FileResponse;
+    use Verge\Http\Response\HtmlResponse;
+    use Verge\Http\Response\JsonResponse;
+    use Verge\Http\Response\RedirectResponse;
 
     /**
      * Resolve a class from the container.
@@ -31,24 +37,45 @@ namespace Verge {
      *
      * @param array<string, string|string[]> $headers
      */
-    function json(mixed $data, int $status = 200, array $headers = []): Response
+    function json(mixed $data, int $status = 200, array $headers = []): JsonResponse
     {
-        $headers['Content-Type'] = 'application/json';
-        $json = json_encode($data);
+        return new JsonResponse($data, $status, $headers);
+    }
 
-        if ($json === false) {
-            throw new \InvalidArgumentException('JSON encode failed: ' . json_last_error_msg());
-        }
-
-        return new Response($json, $status, $headers);
+    /**
+     * Create an HTML response.
+     *
+     * @param array<string, string|string[]> $headers
+     */
+    function html(string $content, int $status = 200, array $headers = []): HtmlResponse
+    {
+        return new HtmlResponse($content, $status, $headers);
     }
 
     /**
      * Create a redirect response.
+     *
+     * @param array<string, string|string[]> $headers
      */
-    function redirect(string $url, int $status = 302): Response
+    function redirect(string $url, int $status = 302, array $headers = []): RedirectResponse
     {
-        return new Response('', $status, ['Location' => $url]);
+        return new RedirectResponse($url, $status, $headers);
+    }
+
+    /**
+     * Create a file download response.
+     */
+    function download(string $path, ?string $filename = null, ?string $contentType = null): DownloadResponse
+    {
+        return new DownloadResponse($path, $filename, $contentType);
+    }
+
+    /**
+     * Create a file response (inline display).
+     */
+    function file(string $path, ?string $contentType = null): FileResponse
+    {
+        return new FileResponse($path, $contentType);
     }
 
     /**
@@ -59,6 +86,46 @@ namespace Verge {
     function route(string $name, array $params = []): string
     {
         return Verge::route($name, $params);
+    }
+
+    /**
+     * Generate a signed URL for a named route.
+     *
+     * @param array<string, mixed> $params
+     * @param int|null $expiration Unix timestamp when the signature expires
+     */
+    function signed_route(string $name, array $params = [], ?int $expiration = null): string
+    {
+        $url = route($name, $params);
+
+        /** @var Routing\UrlSigner $signer */
+        $signer = app()->make(Routing\UrlSigner::class);
+
+        return $signer->sign($url, $expiration);
+    }
+
+    function http(): Client
+    {
+        /** @var Client */
+        return app()->make(Client::class);
+    }
+
+    /**
+     * Get or set config values.
+     *
+     * @param string|array<string, mixed>|null $key
+     */
+    function config(string|array|null $key = null, mixed $default = null): mixed
+    {
+        return app()->config($key, $default);
+    }
+
+    /**
+     * Get the base path, optionally appending a sub-path.
+     */
+    function base_path(string $path = ''): string
+    {
+        return app()->basePath($path);
     }
 }
 

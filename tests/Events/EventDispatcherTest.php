@@ -263,9 +263,9 @@ describe('App Events Integration', function () {
         it('chains with route definitions', function () {
             $app = new App();
 
-            $app->on('request.received', fn () => null)
-                ->get('/test', fn () => 'ok')
-                ->on('response.sent', fn () => null);
+            $app->on('request.received', fn () => null);
+            $app->get('/test', fn () => 'ok');
+            $app->on('response.sent', fn () => null);
 
             expect($app->test()->get('/test')->body())->toBe('ok');
         });

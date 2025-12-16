@@ -6,7 +6,7 @@ namespace Verge\Events;
 
 use Verge\Container;
 
-class EventDispatcher
+class EventDispatcher implements EventDispatcherInterface
 {
     /** @var array<string, array<callable|string>> */
     protected array $listeners = [];

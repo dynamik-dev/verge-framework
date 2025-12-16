@@ -25,7 +25,7 @@ describe('Router', function () {
             $route = $router->add('GET', '/hello', $handler);
 
             expect($route)->toBeInstanceOf(Route::class);
-            expect($route->method)->toBe('GET');
+            expect($route->methods)->toBe(['GET']);
             expect($route->path)->toBe('/hello');
             expect($route->handler)->toBe($handler);
         });
@@ -35,7 +35,7 @@ describe('Router', function () {
 
             $route = $router->add('get', '/test', fn () => 'test');
 
-            expect($route->method)->toBe('GET');
+            expect($route->methods)->toBe(['GET']);
         });
 
         it('compiles path pattern for static routes', function () {

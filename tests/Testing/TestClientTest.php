@@ -8,34 +8,32 @@ use Verge\Testing\TestClient;
 
 function createTestApp(): App
 {
-    $app = App::buildDefaults();
+    $app = new App();
 
-    $app->routes(function ($router) {
-        $router->get('/', fn () => 'home');
-        $router->get('/json', fn () => ['status' => 'ok']);
-        $router->get('/users/{id}', fn ($id) => ['id' => $id]);
-        $router->post('/users', fn (\Verge\Http\Request $req) => [
-            'created' => true,
-            'data' => $req->json()
-        ]);
-        $router->put('/users/{id}', fn ($id, \Verge\Http\Request $req) => [
-            'updated' => $id,
-            'data' => $req->json()
-        ]);
-        $router->patch('/users/{id}', fn ($id) => ['patched' => $id]);
-        $router->delete('/users/{id}', fn ($id) => null);
-        $router->get('/headers', fn (\Verge\Http\Request $req) => [
-            'auth' => $req->header('Authorization'),
-            'custom' => $req->header('X-Custom')
-        ]);
-        $router->get('/cookies', fn (\Verge\Http\Request $req) => [
-            'cookie' => $req->header('Cookie')
-        ]);
-        $router->get('/query', fn (\Verge\Http\Request $req) => [
-            'page' => $req->query('page'),
-            'limit' => $req->query('limit')
-        ]);
-    });
+    $app->get('/', fn () => 'home');
+    $app->get('/json', fn () => ['status' => 'ok']);
+    $app->get('/users/{id}', fn ($id) => ['id' => $id]);
+    $app->post('/users', fn (\Verge\Http\Request $req) => [
+        'created' => true,
+        'data' => $req->json()
+    ]);
+    $app->put('/users/{id}', fn ($id, \Verge\Http\Request $req) => [
+        'updated' => $id,
+        'data' => $req->json()
+    ]);
+    $app->patch('/users/{id}', fn ($id) => ['patched' => $id]);
+    $app->delete('/users/{id}', fn ($id) => null);
+    $app->get('/headers', fn (\Verge\Http\Request $req) => [
+        'auth' => $req->header('Authorization'),
+        'custom' => $req->header('X-Custom')
+    ]);
+    $app->get('/cookies', fn (\Verge\Http\Request $req) => [
+        'cookie' => $req->header('Cookie')
+    ]);
+    $app->get('/query', fn (\Verge\Http\Request $req) => [
+        'page' => $req->query('page'),
+        'limit' => $req->query('limit')
+    ]);
 
     return $app;
 }
@@ -221,11 +219,11 @@ describe('TestClient', function () {
 
     describe('chaining', function () {
         it('chains headers and cookies', function () {
-            $app = App::buildDefaults();
-            $app->routes(fn ($r) => $r->get('/all', fn (\Verge\Http\Request $req) => [
+            $app = new App();
+            $app->get('/all', fn (\Verge\Http\Request $req) => [
                 'auth' => $req->header('Authorization'),
                 'cookie' => $req->header('Cookie')
-            ]));
+            ]);
 
             $response = $app->test()
                 ->withHeader('Authorization', 'Bearer token')

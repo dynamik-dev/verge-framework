@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Verge\App;
-use Verge\Env;
+use Verge\Env\Env;
 use Verge\Cache\Cache;
 use Verge\Cache\CacheInterface;
 use Verge\Cache\Drivers\MemoryCacheDriver;

@@ -33,7 +33,7 @@ class RouteCache
                     $cacheable[] = $this->extractRouteData($route);
                 } else {
                     $skipped[] = [
-                        'method' => $route->method,
+                        'method' => $method,
                         'path' => $route->path,
                         'reason' => $this->getSkipReason($route),
                     ];
@@ -137,7 +137,7 @@ class RouteCache
     private function extractRouteData(Route $route): array
     {
         return [
-            'method' => $route->method,
+            'method' => $route->methods[0],
             'path' => $route->path,
             'pattern' => $route->pattern,
             'paramNames' => $route->paramNames,

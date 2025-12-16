@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Verge\App;
 use Verge\Routing\Route;
 use Verge\Routing\Router;
-use Verge\Routing\RouteNotFoundException;
+use Verge\Routing\Exceptions\RouteNotFoundException;
 use Verge\Verge;
 
 use function Verge\route;

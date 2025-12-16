@@ -5,13 +5,14 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
+	site: 'https://verge.dev',
 	vite: {
 		plugins: [tailwindcss()],
 	},
 	integrations: [
 		starlight({
 			title: 'Verge',
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/verge/verge' }],
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/dynamik-dev/verge-framework' }],
 			customCss: ['./src/styles/custom.css'],
 			components: {
 				SiteTitle: './src/components/Logo.astro',

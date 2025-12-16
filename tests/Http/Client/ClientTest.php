@@ -132,21 +132,21 @@ describe('ClientException', function () {
 
 describe('NetworkException', function () {
     it('implements PSR-18 NetworkExceptionInterface', function () {
-        $request = new Request('GET', '/');
+        $request = Request::create('GET', '/');
         $exception = new NetworkException($request, 'Connection failed');
 
         expect($exception)->toBeInstanceOf(\Psr\Http\Client\NetworkExceptionInterface::class);
     });
 
     it('provides access to the request', function () {
-        $request = new Request('GET', '/test');
+        $request = Request::create('GET', '/test');
         $exception = new NetworkException($request, 'Timeout');
 
         expect($exception->getRequest())->toBe($request);
     });
 
     it('extends ClientException', function () {
-        $request = new Request('GET', '/');
+        $request = Request::create('GET', '/');
         $exception = new NetworkException($request, 'error');
 
         expect($exception)->toBeInstanceOf(ClientException::class);
@@ -155,21 +155,21 @@ describe('NetworkException', function () {
 
 describe('RequestException', function () {
     it('implements PSR-18 RequestExceptionInterface', function () {
-        $request = new Request('GET', '/');
+        $request = Request::create('GET', '/');
         $exception = new RequestException($request, 'Invalid URL');
 
         expect($exception)->toBeInstanceOf(\Psr\Http\Client\RequestExceptionInterface::class);
     });
 
     it('provides access to the request', function () {
-        $request = new Request('POST', '/api/data');
+        $request = Request::create('POST', '/api/data');
         $exception = new RequestException($request, 'Bad request');
 
         expect($exception->getRequest())->toBe($request);
     });
 
     it('extends ClientException', function () {
-        $request = new Request('GET', '/');
+        $request = Request::create('GET', '/');
         $exception = new RequestException($request, 'error');
 
         expect($exception)->toBeInstanceOf(ClientException::class);

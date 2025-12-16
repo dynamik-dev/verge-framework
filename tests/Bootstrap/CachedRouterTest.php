@@ -33,7 +33,7 @@ describe('CachedRouter', function () {
 
             $router = new CachedRouter($cacheData);
 
-            $request = new Request('GET', '/');
+            $request = Request::create('GET', '/');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -53,7 +53,7 @@ describe('CachedRouter', function () {
             ];
 
             $router = new CachedRouter($cacheData);
-            $request = new Request('GET', '/not-found');
+            $request = Request::create('GET', '/not-found');
             $match = $router->match($request);
 
             expect($match->matched)->toBeFalse();
@@ -84,7 +84,7 @@ describe('CachedRouter', function () {
             ];
 
             $router = new CachedRouter($cacheData);
-            $request = new Request('GET', '/users/123');
+            $request = Request::create('GET', '/users/123');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -113,7 +113,7 @@ describe('CachedRouter', function () {
             ];
 
             $router = new CachedRouter($cacheData);
-            $request = new Request('GET', '/users/42/posts/99');
+            $request = Request::create('GET', '/users/42/posts/99');
             $match = $router->match($request);
 
             expect($match->matched)->toBeTrue();
@@ -230,7 +230,7 @@ describe('CachedRouter', function () {
             ];
 
             $router = new CachedRouter($cacheData);
-            $request = new Request('GET', '/admin');
+            $request = Request::create('GET', '/admin');
             $match = $router->match($request);
 
             expect($match->route->getMiddleware())->toBe(['AuthMiddleware', 'AdminMiddleware']);

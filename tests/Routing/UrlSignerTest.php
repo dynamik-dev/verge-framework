@@ -124,14 +124,14 @@ describe('Request::hasValidSignature()', function () {
         $signer = new UrlSigner('test-secret-key');
         $signedUrl = $signer->sign('https://example.com/verify?token=abc');
 
-        $request = new Request('GET', $signedUrl);
+        $request = Request::create('GET', $signedUrl);
 
         expect($request->hasValidSignature($signer))->toBeTrue();
     });
 
     it('returns false for unsigned request', function () {
         $signer = new UrlSigner('test-secret-key');
-        $request = new Request('GET', 'https://example.com/verify?token=abc');
+        $request = Request::create('GET', 'https://example.com/verify?token=abc');
 
         expect($request->hasValidSignature($signer))->toBeFalse();
     });
@@ -141,7 +141,7 @@ describe('Request::hasValidSignature()', function () {
         $signedUrl = $signer->sign('https://example.com/verify?token=abc');
         $tampered = str_replace('token=abc', 'token=xyz', $signedUrl);
 
-        $request = new Request('GET', $tampered);
+        $request = Request::create('GET', $tampered);
 
         expect($request->hasValidSignature($signer))->toBeFalse();
     });
@@ -188,25 +188,25 @@ describe('signed_route() helper', function () {
 
 describe('Request::fullUrl()', function () {
     it('builds full URL with scheme and host', function () {
-        $request = new Request('GET', 'https://example.com/path?foo=bar');
+        $request = Request::create('GET', 'https://example.com/path?foo=bar');
 
         expect($request->fullUrl())->toBe('https://example.com/path?foo=bar');
     });
 
     it('handles URL with port', function () {
-        $request = new Request('GET', 'https://example.com:8080/path');
+        $request = Request::create('GET', 'https://example.com:8080/path');
 
         expect($request->fullUrl())->toBe('https://example.com:8080/path');
     });
 
     it('handles URL without query', function () {
-        $request = new Request('GET', 'https://example.com/path');
+        $request = Request::create('GET', 'https://example.com/path');
 
         expect($request->fullUrl())->toBe('https://example.com/path');
     });
 
     it('defaults to / for empty path', function () {
-        $request = new Request('GET', 'https://example.com');
+        $request = Request::create('GET', 'https://example.com');
 
         expect($request->fullUrl())->toContain('/');
     });

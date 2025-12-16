@@ -445,7 +445,7 @@ describe('App', function () {
             $app = new App();
             $app->get('/', fn () => 'home');
 
-            $request = new Request('GET', '/');
+            $request = Request::create('GET', '/');
             $response = $app->handle($request);
 
             expect($response)->toBeInstanceOf(Response::class);
@@ -455,7 +455,7 @@ describe('App', function () {
         it('returns 404 for unmatched route', function () {
             $app = new App();
 
-            $request = new Request('GET', '/missing');
+            $request = Request::create('GET', '/missing');
             $response = $app->handle($request);
 
             expect($response->status())->toBe(404);
@@ -471,7 +471,7 @@ describe('App', function () {
                 return 'ok';
             });
 
-            $request = new Request('GET', '/test');
+            $request = Request::create('GET', '/test');
             $app->handle($request);
 
             expect($capturedRequest)->toBe($request);

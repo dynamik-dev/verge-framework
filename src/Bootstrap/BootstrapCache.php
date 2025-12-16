@@ -8,17 +8,17 @@ use Verge\App;
 use Verge\Routing\RouterInterface;
 
 /**
- * Bootstrap cache provider for Verge.
+ * Bootstrap cache module for Verge.
  *
  * Provides Laravel-style caching of routes and container metadata
  * for improved performance in production environments.
  *
  * Simple usage (auto-detects production from APP_ENV):
- *   $app->configure(BootstrapCache::class)
+ *   $app->module(BootstrapCache::class)
  *       ->get('/', [HomeController::class, 'index']);
  *
  * Custom configuration:
- *   $app->configure(new BootstrapCache(
+ *   $app->module(new BootstrapCache(
  *       path: __DIR__ . '/bootstrap/cache',
  *       enabled: true,
  *   ));
@@ -67,7 +67,7 @@ class BootstrapCache
     }
 
     /**
-     * Invoked when passed to $app->configure().
+     * Invoked when passed to $app->module().
      */
     public function __invoke(App $app): void
     {
@@ -107,7 +107,7 @@ class BootstrapCache
     public function warm(): WarmResult
     {
         if ($this->app === null) {
-            throw new \RuntimeException('BootstrapCache must be configured via $app->configure() before warming');
+            throw new \RuntimeException('BootstrapCache must be registered via $app->module() before warming');
         }
 
         $this->ensureCacheDirectory();

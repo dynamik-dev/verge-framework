@@ -7,6 +7,7 @@ namespace Verge;
 use Verge\Cache\CacheModule;
 use Verge\Clock\ClockModule;
 use Verge\Config\ConfigModule;
+use Verge\Console\ConsoleModule;
 use Verge\Env\EnvModule;
 use Verge\Events\EventsModule;
 use Verge\Http\HttpModule;
@@ -17,7 +18,7 @@ class AppBuilder
 {
     public function __invoke(App $app): void
     {
-        $app->configure([
+        $app->module([
             EnvModule::class,
             ConfigModule::class,
             RoutingModule::class,
@@ -26,6 +27,7 @@ class AppBuilder
             CacheModule::class,
             LogModule::class,
             ClockModule::class,
+            ConsoleModule::class,
         ]);
     }
 }

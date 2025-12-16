@@ -13,12 +13,12 @@ use Verge\Routing\RouterInterface;
  * Build-time optimization tool that converts closure routes to handler classes.
  *
  * Usage:
- *   $app->configure(Bundler::class);
+ *   $app->module(Bundler::class);
  *   $result = $app->make(Bundler::class)->build();
  *   echo $result->summary();
  *
  * With options:
- *   $app->configure(new Bundler(
+ *   $app->module(new Bundler(
  *       outputPath: __DIR__ . '/dist',
  *       namespace: 'App\\Handlers',
  *   ));
@@ -43,7 +43,7 @@ class Bundler
     }
 
     /**
-     * Invoked when passed to $app->configure().
+     * Invoked when passed to $app->module().
      */
     public function __invoke(App $app): void
     {
@@ -58,7 +58,7 @@ class Bundler
     {
         if ($this->app === null) {
             throw new \RuntimeException(
-                'Bundler must be configured via $app->configure() before building'
+                'Bundler must be registered via $app->module() before building'
             );
         }
 
@@ -313,7 +313,7 @@ PHP;
     {
         if ($this->app === null) {
             throw new \RuntimeException(
-                'Bundler must be configured via $app->configure() before analyzing'
+                'Bundler must be registered via $app->module() before analyzing'
             );
         }
 

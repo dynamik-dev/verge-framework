@@ -65,25 +65,25 @@ describe('Bundler', function () {
             $app = new App();
             $bundler = new Bundler(outputPath: $this->outputPath);
 
-            $app->configure($bundler);
+            $app->module($bundler);
 
             expect($app->make(Bundler::class))->toBe($bundler);
         });
 
         it('can be configured with class string', function () {
             $app = new App();
-            $app->configure(Bundler::class);
+            $app->module(Bundler::class);
 
             expect($app->make(Bundler::class))->toBeInstanceOf(Bundler::class);
         });
     });
 
     describe('build()', function () {
-        it('throws when called before configure', function () {
+        it('throws when called before module', function () {
             $bundler = new Bundler(outputPath: $this->outputPath);
 
             expect(fn () => $bundler->build())
-                ->toThrow(\RuntimeException::class, 'must be configured');
+                ->toThrow(\RuntimeException::class, 'must be registered');
         });
 
         it('returns BuildResult', function () {
@@ -91,7 +91,7 @@ describe('Bundler', function () {
             $app->get('/', createIndexClosure());
 
             $bundler = new Bundler(outputPath: $this->outputPath);
-            $app->configure($bundler);
+            $app->module($bundler);
 
             $result = $bundler->build();
 
@@ -105,7 +105,7 @@ describe('Bundler', function () {
             $app->get('/users/{id}', createUserByIdClosure());
 
             $bundler = new Bundler(outputPath: $this->outputPath, symlinkVendor: false);
-            $app->configure($bundler);
+            $app->module($bundler);
 
             $result = $bundler->build();
 
@@ -125,7 +125,7 @@ describe('Bundler', function () {
                 outputPath: $this->outputPath,
                 namespace: 'App\\Handlers',
             );
-            $app->configure($bundler);
+            $app->module($bundler);
 
             $result = $bundler->build();
 
@@ -142,7 +142,7 @@ describe('Bundler', function () {
             $app->get('/', createIndexClosure());
 
             $bundler = new Bundler(outputPath: $this->outputPath);
-            $app->configure($bundler);
+            $app->module($bundler);
 
             $bundler->build();
 
@@ -160,7 +160,7 @@ describe('Bundler', function () {
             $app->get('/users', ['TestController', 'index']);
 
             $bundler = new Bundler(outputPath: $this->outputPath);
-            $app->configure($bundler);
+            $app->module($bundler);
 
             $result = $bundler->build();
 
@@ -180,7 +180,7 @@ describe('Bundler', function () {
 
             $app = $obj->getApp();
             $bundler = new Bundler(outputPath: $this->outputPath);
-            $app->configure($bundler);
+            $app->module($bundler);
 
             $result = $bundler->build();
 
@@ -194,7 +194,7 @@ describe('Bundler', function () {
             $app->get('/double/{n}', createDoubleClosure(2));
 
             $bundler = new Bundler(outputPath: $this->outputPath);
-            $app->configure($bundler);
+            $app->module($bundler);
 
             $result = $bundler->build();
 
@@ -208,11 +208,11 @@ describe('Bundler', function () {
     });
 
     describe('analyze()', function () {
-        it('throws when called before configure', function () {
+        it('throws when called before module', function () {
             $bundler = new Bundler(outputPath: $this->outputPath);
 
             expect(fn () => $bundler->analyze())
-                ->toThrow(\RuntimeException::class, 'must be configured');
+                ->toThrow(\RuntimeException::class, 'must be registered');
         });
 
         it('returns route analysis', function () {
@@ -221,7 +221,7 @@ describe('Bundler', function () {
             $app->get('/users', ['TestController', 'index']);
 
             $bundler = new Bundler(outputPath: $this->outputPath);
-            $app->configure($bundler);
+            $app->module($bundler);
 
             $analysis = $bundler->analyze();
 
@@ -235,7 +235,7 @@ describe('Bundler', function () {
             $app->get('/users/{id}', createUserByIdClosure());
 
             $bundler = new Bundler(outputPath: $this->outputPath);
-            $app->configure($bundler);
+            $app->module($bundler);
 
             $analysis = $bundler->analyze();
 
@@ -251,7 +251,7 @@ describe('Bundler', function () {
             $app->get('/users', createUsersClosure());
 
             $bundler = new Bundler(outputPath: $this->outputPath, symlinkVendor: false);
-            $app->configure($bundler);
+            $app->module($bundler);
 
             $result = $bundler->build();
             $summary = $result->summary();
@@ -273,7 +273,7 @@ describe('Bundler', function () {
 
             $app = $obj->getApp();
             $bundler = new Bundler(outputPath: $this->outputPath);
-            $app->configure($bundler);
+            $app->module($bundler);
 
             $result = $bundler->build();
             $summary = $result->summary();

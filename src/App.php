@@ -42,6 +42,9 @@ class App
     /** @var array<string, string> Default driver names per service */
     protected array $defaultDrivers = [];
 
+    /** @var array<string, callable|class-string> Registered console commands */
+    protected array $commands = [];
+
     public function __construct(?ContainerInterface $container = null)
     {
         if ($container === null) {
@@ -56,8 +59,8 @@ class App
         $this->container->instance(App::class, $this);
         $this->container->instance(static::class, $this);
 
-        // Bootstrap framework via service providers
-        $this->configure(new AppBuilder());
+        // Bootstrap framework modules
+        $this->module(new AppBuilder());
     }
 
     protected function router(): RouterInterface
@@ -460,37 +463,50 @@ class App
     }
 
     /**
-     * @param callable(App): void|string|array<mixed> $provider
+     * Register a module or closure module.
+     *
+     * @param callable(App): void|string|array<mixed> $module
      */
-    public function configure(callable|string|array $provider): static
+    public function module(callable|string|array $module): static
     {
-        if (is_array($provider)) {
-            foreach ($provider as $p) {
-                /** @var callable(App): void|string|array<mixed> $p */
-                $this->configure($p);
+        if (is_array($module)) {
+            foreach ($module as $m) {
+                /** @var callable(App): void|string|array<mixed> $m */
+                $this->module($m);
             }
             return $this;
         }
 
-        if (is_string($provider)) {
-            $provider = $this->container->resolve($provider);
+        if (is_string($module)) {
+            $module = $this->container->resolve($module);
         }
 
-        if (!is_callable($provider)) {
+        if (!is_callable($module)) {
             throw new \RuntimeException('Module must be callable');
         }
-        $provider($this);
+        $module($this);
         return $this;
     }
 
     /**
-     * Register a module.
+     * Register a console command.
      *
-     * @param class-string $module
+     * @param callable|class-string $handler
      */
-    public function module(string $module): static
+    public function command(string $name, callable|string $handler): static
     {
-        return $this->configure($module);
+        $this->commands[$name] = $handler;
+        return $this;
+    }
+
+    /**
+     * Get all registered console commands.
+     *
+     * @return array<string, callable|class-string>
+     */
+    public function getCommands(): array
+    {
+        return $this->commands;
     }
 
     /**

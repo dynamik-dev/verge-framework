@@ -4,8 +4,63 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c2e8ede2c84d737dfe15855cdae8f5eb",
+    "content-hash": "effcebb7a769201499368f4954f81196",
     "packages": [
+        {
+            "name": "minicli/minicli",
+            "version": "4.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/minicli/minicli.git",
+                "reference": "81f96caba0c45a29f41b2ac7f17a3f70d8a10893"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/minicli/minicli/zipball/81f96caba0c45a29f41b2ac7f17a3f70d8a10893",
+                "reference": "81f96caba0c45a29f41b2ac7f17a3f70d8a10893",
+                "shasum": ""
+            },
+            "require": {
+                "ext-readline": "*",
+                "php": ">=8.2"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.18",
+                "mockery/mockery": "^1.6",
+                "pestphp/pest": "^3.2",
+                "phpstan/phpstan": "^1.12"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/helpers.php"
+                ],
+                "psr-4": {
+                    "Minicli\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Experimental micro CLI framework for PHP",
+            "homepage": "https://github.com/minicli/minicli",
+            "keywords": [
+                "cli",
+                "command-line"
+            ],
+            "support": {
+                "issues": "https://github.com/minicli/minicli/issues",
+                "source": "https://github.com/minicli/minicli/tree/4.2.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/erikaheidi",
+                    "type": "github"
+                }
+            ],
+            "time": "2025-04-08T18:57:53+00:00"
+        },
         {
             "name": "psr/clock",
             "version": "1.0.0",
@@ -1296,6 +1351,57 @@
             "time": "2025-12-12T10:29:19+00:00"
         },
         {
+            "name": "hamcrest/hamcrest-php",
+            "version": "v2.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hamcrest/hamcrest-php.git",
+                "reference": "f8b1c0173b22fa6ec77a81fe63e5b01eba7e6487"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hamcrest/hamcrest-php/zipball/f8b1c0173b22fa6ec77a81fe63e5b01eba7e6487",
+                "reference": "f8b1c0173b22fa6ec77a81fe63e5b01eba7e6487",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4|^8.0"
+            },
+            "replace": {
+                "cordoval/hamcrest-php": "*",
+                "davedevelopment/hamcrest-php": "*",
+                "kodova/hamcrest-php": "*"
+            },
+            "require-dev": {
+                "phpunit/php-file-iterator": "^1.4 || ^2.0 || ^3.0",
+                "phpunit/phpunit": "^4.8.36 || ^5.7 || ^6.5 || ^7.0 || ^8.0 || ^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.1-dev"
+                }
+            },
+            "autoload": {
+                "classmap": [
+                    "hamcrest"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "This is the PHP port of Hamcrest Matchers",
+            "keywords": [
+                "test"
+            ],
+            "support": {
+                "issues": "https://github.com/hamcrest/hamcrest-php/issues",
+                "source": "https://github.com/hamcrest/hamcrest-php/tree/v2.1.1"
+            },
+            "time": "2025-04-30T06:54:44+00:00"
+        },
+        {
             "name": "jean85/pretty-package-versions",
             "version": "2.1.1",
             "source": {
@@ -1354,6 +1460,89 @@
                 "source": "https://github.com/Jean85/pretty-package-versions/tree/2.1.1"
             },
             "time": "2025-03-19T14:43:43+00:00"
+        },
+        {
+            "name": "mockery/mockery",
+            "version": "1.6.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mockery/mockery.git",
+                "reference": "1f4efdd7d3beafe9807b08156dfcb176d18f1699"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mockery/mockery/zipball/1f4efdd7d3beafe9807b08156dfcb176d18f1699",
+                "reference": "1f4efdd7d3beafe9807b08156dfcb176d18f1699",
+                "shasum": ""
+            },
+            "require": {
+                "hamcrest/hamcrest-php": "^2.0.1",
+                "lib-pcre": ">=7.0",
+                "php": ">=7.3"
+            },
+            "conflict": {
+                "phpunit/phpunit": "<8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^8.5 || ^9.6.17",
+                "symplify/easy-coding-standard": "^12.1.14"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "library/helpers.php",
+                    "library/Mockery.php"
+                ],
+                "psr-4": {
+                    "Mockery\\": "library/Mockery"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Pádraic Brady",
+                    "email": "padraic.brady@gmail.com",
+                    "homepage": "https://github.com/padraic",
+                    "role": "Author"
+                },
+                {
+                    "name": "Dave Marshall",
+                    "email": "dave.marshall@atstsolutions.co.uk",
+                    "homepage": "https://davedevelopment.co.uk",
+                    "role": "Developer"
+                },
+                {
+                    "name": "Nathanael Esayeas",
+                    "email": "nathanael.esayeas@protonmail.com",
+                    "homepage": "https://github.com/ghostwriter",
+                    "role": "Lead Developer"
+                }
+            ],
+            "description": "Mockery is a simple yet flexible PHP mock object framework",
+            "homepage": "https://github.com/mockery/mockery",
+            "keywords": [
+                "BDD",
+                "TDD",
+                "library",
+                "mock",
+                "mock objects",
+                "mockery",
+                "stub",
+                "test",
+                "test double",
+                "testing"
+            ],
+            "support": {
+                "docs": "https://docs.mockery.io/",
+                "issues": "https://github.com/mockery/mockery/issues",
+                "rss": "https://github.com/mockery/mockery/releases.atom",
+                "security": "https://github.com/mockery/mockery/security/advisories",
+                "source": "https://github.com/mockery/mockery"
+            },
+            "time": "2024-05-16T03:13:13+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -1906,6 +2095,74 @@
                 }
             ],
             "time": "2024-01-26T09:46:42+00:00"
+        },
+        {
+            "name": "pestphp/pest-plugin-mock",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pestphp/pest-plugin-mock.git",
+                "reference": "5b5535a7cfbb8ddf071285ede1019213198e87d4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/pestphp/pest-plugin-mock/zipball/5b5535a7cfbb8ddf071285ede1019213198e87d4",
+                "reference": "5b5535a7cfbb8ddf071285ede1019213198e87d4",
+                "shasum": ""
+            },
+            "require": {
+                "mockery/mockery": "^1.5.1",
+                "pestphp/pest": "^2.0.0",
+                "pestphp/pest-plugin": "^2.0.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "pestphp/pest-dev-tools": "^2.5.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/Autoload.php"
+                ],
+                "psr-4": {
+                    "Pest\\Mock\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Adds mocking capabilities to Pest or PHPUnit",
+            "keywords": [
+                "framework",
+                "mock",
+                "mocking",
+                "pest",
+                "php",
+                "plugin",
+                "test",
+                "testing",
+                "unit"
+            ],
+            "support": {
+                "source": "https://github.com/pestphp/pest-plugin-mock/tree/v2.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=66BYDWAT92N6L",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/nunomaduro",
+                    "type": "github"
+                },
+                {
+                    "url": "https://www.patreon.com/nunomaduro",
+                    "type": "patreon"
+                }
+            ],
+            "abandoned": "mockery/mockery",
+            "time": "2023-03-20T10:00:51+00:00"
         },
         {
             "name": "phar-io/manifest",

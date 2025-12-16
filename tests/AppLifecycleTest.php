@@ -43,7 +43,7 @@ describe('App Lifecycle', function () {
         it('allows modules to register routes on app.ready', function () {
             $app = new App();
 
-            $app->configure(function ($app) {
+            $app->module(function ($app) {
                 $app->on('app.ready', function () use ($app) {
                     $app->get('/deferred', fn () => 'deferred route');
                 });
@@ -56,12 +56,12 @@ describe('App Lifecycle', function () {
             $app = new App();
 
             // First module registers a service
-            $app->configure(function ($app) {
+            $app->module(function ($app) {
                 $app->singleton('greeting', fn () => 'Hello from service');
             });
 
             // Second module uses that service on app.ready
-            $app->configure(function ($app) {
+            $app->module(function ($app) {
                 $app->on('app.ready', function () use ($app) {
                     $greeting = $app->make('greeting');
                     $app->get('/greeting', fn () => $greeting);
@@ -89,18 +89,18 @@ describe('App Lifecycle', function () {
         });
     });
 
-    describe('configure() with app.ready pattern', function () {
+    describe('module() with app.ready pattern', function () {
         it('supports class-based modules', function () {
             $app = new App();
-            $app->configure(TestLifecycleModule::class);
+            $app->module(TestLifecycleModule::class);
 
             expect($app->test()->get('/module-route')->body())->toBe('from module');
         });
 
-        it('supports callable modules', function () {
+        it('supports closure modules', function () {
             $app = new App();
 
-            $app->configure(function ($app) {
+            $app->module(function ($app) {
                 $app->singleton('config.value', fn () => 42);
                 $app->on('app.ready', function () use ($app) {
                     $app->get('/config', fn () => (string) $app->make('config.value'));
@@ -114,14 +114,14 @@ describe('App Lifecycle', function () {
             $app = new App();
             $order = [];
 
-            $app->configure(function ($app) use (&$order) {
+            $app->module(function ($app) use (&$order) {
                 $order[] = 'module1:bind';
                 $app->on('app.ready', function () use (&$order) {
                     $order[] = 'module1:ready';
                 });
             });
 
-            $app->configure(function ($app) use (&$order) {
+            $app->module(function ($app) use (&$order) {
                 $order[] = 'module2:bind';
                 $app->on('app.ready', function () use (&$order) {
                     $order[] = 'module2:ready';

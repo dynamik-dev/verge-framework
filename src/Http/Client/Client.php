@@ -267,6 +267,7 @@ class Client implements ClientInterface
      */
     private function configureCurl($ch, RequestInterface $request, string $uri): void
     {
+        /** @phpstan-ignore argument.type */
         curl_setopt_array($ch, [
             CURLOPT_URL => $uri,
             CURLOPT_RETURNTRANSFER => true,

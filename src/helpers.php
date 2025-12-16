@@ -88,10 +88,44 @@ namespace Verge {
         return Verge::route($name, $params);
     }
 
+    /**
+     * Generate a signed URL for a named route.
+     *
+     * @param array<string, mixed> $params
+     * @param int|null $expiration Unix timestamp when the signature expires
+     */
+    function signed_route(string $name, array $params = [], ?int $expiration = null): string
+    {
+        $url = route($name, $params);
+
+        /** @var Routing\UrlSigner $signer */
+        $signer = app()->make(Routing\UrlSigner::class);
+
+        return $signer->sign($url, $expiration);
+    }
+
     function http(): Client
     {
         /** @var Client */
         return app()->make(Client::class);
+    }
+
+    /**
+     * Get or set config values.
+     *
+     * @param string|array<string, mixed>|null $key
+     */
+    function config(string|array|null $key = null, mixed $default = null): mixed
+    {
+        return app()->config($key, $default);
+    }
+
+    /**
+     * Get the base path, optionally appending a sub-path.
+     */
+    function base_path(string $path = ''): string
+    {
+        return app()->basePath($path);
     }
 }
 

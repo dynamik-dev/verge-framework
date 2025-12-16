@@ -203,7 +203,7 @@ describe('App', function () {
             it('creates contextual binding', function () {
                 $app = new App();
 
-                $app->bind(TestService::class, fn () => new class extends TestService {
+                $app->bind(TestService::class, fn () => new class () extends TestService {
                     public function greet(): string
                     {
                         return 'Hello from contextual';

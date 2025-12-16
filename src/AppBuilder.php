@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Verge;
 
 use Verge\Cache\CacheModule;
+use Verge\Config\ConfigModule;
 use Verge\Env\EnvModule;
 use Verge\Events\EventsModule;
 use Verge\Http\HttpModule;
@@ -17,6 +18,7 @@ class AppBuilder
     {
         $app->configure([
             EnvModule::class,
+            ConfigModule::class,
             RoutingModule::class,
             HttpModule::class,
             EventsModule::class,

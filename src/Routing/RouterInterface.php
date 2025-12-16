@@ -7,9 +7,9 @@ namespace Verge\Routing;
 /**
  * Interface for route registration (write operations).
  *
- * For read operations (matching, URL generation), see RouteMatcherInterface.
+ * Extends RouteMatcherInterface to include read operations (matching, URL generation).
  */
-interface RouterInterface
+interface RouterInterface extends RouteMatcherInterface
 {
     /**
      * @param callable|array<mixed>|string $handler

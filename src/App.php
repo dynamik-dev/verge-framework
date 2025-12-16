@@ -30,9 +30,11 @@ class App
     protected RouterInterface|RouteMatcherInterface|null $router = null;
     protected ?EnvInterface $env = null;
     protected ?EventDispatcherInterface $events = null;
+    protected ?Config\Config $config = null;
     protected string $currentPrefix = '';
     protected ?RouteGroup $currentGroup = null;
     protected bool $booted = false;
+    protected ?string $basePath = null;
 
     /** @var array<string, array<string, \Closure>> */
     protected array $drivers = [];
@@ -60,7 +62,7 @@ class App
 
     protected function router(): RouterInterface
     {
-        if ($this->router !== null) {
+        if ($this->router instanceof RouterInterface) {
             return $this->router;
         }
         $router = $this->container->resolve(RouterInterface::class);
@@ -380,6 +382,81 @@ class App
     public function env(string $key, mixed $default = null): mixed
     {
         return $this->getEnv()->get($key, $default);
+    }
+
+    /**
+     * Set the base path for the application.
+     */
+    public function setBasePath(string $path): static
+    {
+        $this->basePath = rtrim($path, '/\\');
+        return $this;
+    }
+
+    /**
+     * Get the base path, optionally appending a sub-path.
+     */
+    public function basePath(string $path = ''): string
+    {
+        if ($this->basePath === null) {
+            throw new \RuntimeException('Base path not set. Call setBasePath() first.');
+        }
+
+        if ($path === '') {
+            return $this->basePath;
+        }
+
+        return $this->basePath . DIRECTORY_SEPARATOR . ltrim($path, '/\\');
+    }
+
+    /**
+     * Get the config instance.
+     */
+    protected function getConfig(): Config\Config
+    {
+        if ($this->config !== null) {
+            return $this->config;
+        }
+
+        $config = $this->container->resolve(Config\Config::class);
+        if (!$config instanceof Config\Config) {
+            throw new \RuntimeException('Resolved service is not a Config instance');
+        }
+
+        return $this->config = $config;
+    }
+
+    /**
+     * Get or set config values.
+     *
+     * @param string|array<string, mixed>|null $key
+     */
+    public function config(string|array|null $key = null, mixed $default = null): mixed
+    {
+        $config = $this->getConfig();
+
+        // Get all config
+        if ($key === null) {
+            return $config->all();
+        }
+
+        // Set config values
+        if (is_array($key)) {
+            $config->set($key);
+            return null;
+        }
+
+        // Get config value
+        return $config->get($key, $default);
+    }
+
+    /**
+     * Load config from a file.
+     */
+    public function loadConfig(string $path, ?string $namespace = null): static
+    {
+        $this->getConfig()->load($path, $namespace);
+        return $this;
     }
 
     /**

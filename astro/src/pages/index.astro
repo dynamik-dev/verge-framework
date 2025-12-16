@@ -1,0 +1,219 @@
+---
+import '@fontsource/jersey-10';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+import '../styles/landing.css';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A minimal PHP framework for developers who value clarity over magic. Fast, simple, beautiful." />
+    <title>Verge - A Minimal PHP Framework</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="bg-dark text-gray-200 font-sans antialiased leading-relaxed">
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[hsla(224,10%,10%,0.8)] backdrop-blur-xl border-b border-hairline">
+      <a href="/" class="font-jersey text-2xl text-white no-underline tracking-widest">VERGE</a>
+      <nav class="flex gap-8">
+        <a href="/getting-started/" class="text-gray-200 no-underline text-sm transition-colors hover:text-white">Docs</a>
+        <a href="https://github.com/chrisarter/verge-framework" target="_blank" rel="noopener" class="text-gray-200 no-underline text-sm transition-colors hover:text-white">GitHub</a>
+      </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="min-h-screen flex items-center justify-center pt-24 pb-16 px-6 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.15)_0%,transparent_50%),radial-gradient(ellipse_at_bottom_right,rgba(59,130,246,0.15)_0%,transparent_50%)]">
+      <div class="max-w-[900px] w-full text-center">
+        <h1 class="font-jersey text-[clamp(4rem,14vw,9rem)] font-normal tracking-[0.15em] text-white mb-2 leading-none [text-shadow:0_0_80px_#a855f7]">VERGE</h1>
+        <p class="text-[clamp(1.125rem,2.5vw,1.25rem)] text-gray-200 mb-12 leading-relaxed">A minimal PHP framework for developers<br/>who value clarity over magic</p>
+
+        <div class="bg-gradient-to-b from-dark-50 to-dark border border-hairline-light rounded-xl overflow-hidden text-left mb-10 shadow-2xl">
+          <div class="flex items-center gap-2 px-4 py-3 bg-dark-50 border-b border-hairline">
+            <span class="w-3 h-3 rounded-full bg-accent-red"></span>
+            <span class="w-3 h-3 rounded-full bg-accent-orange"></span>
+            <span class="w-3 h-3 rounded-full bg-accent-green"></span>
+            <span class="ml-auto font-mono text-xs text-gray-400">index.php</span>
+          </div>
+          <pre class="m-0 p-6 font-mono text-[clamp(0.75rem,1.4vw,0.875rem)] leading-loose overflow-x-auto"><code><span class="text-accent-purple">use</span> <span class="text-accent-blue">Verge\App</span>;
+
+<span class="text-accent-red">$app</span> = <span class="text-accent-purple">new</span> <span class="text-accent-orange">App</span>();
+
+<span class="text-gray-400 italic">// Define routes with closures or controllers</span>
+<span class="text-accent-red">$app</span>-><span class="text-accent-blue">get</span>(<span class="text-accent-green">'/'</span>, <span class="text-accent-purple">fn</span>() => <span class="text-accent-green">'Hello, World!'</span>);
+
+<span class="text-accent-red">$app</span>-><span class="text-accent-blue">get</span>(<span class="text-accent-green">'/users/&#123;id&#125;'</span>, <span class="text-accent-purple">fn</span>(<span class="text-accent-red">$id</span>) => [
+    <span class="text-accent-green">'id'</span> => <span class="text-accent-red">$id</span>,
+    <span class="text-accent-green">'name'</span> => <span class="text-accent-green">'John Doe'</span>
+]);
+
+<span class="text-gray-400 italic">// Add middleware, groups, and more</span>
+<span class="text-accent-red">$app</span>-><span class="text-accent-blue">group</span>(<span class="text-accent-green">'/api'</span>, <span class="text-accent-purple">fn</span>() => [
+    <span class="text-accent-red">$app</span>-><span class="text-accent-blue">get</span>(<span class="text-accent-green">'/status'</span>, <span class="text-accent-orange">StatusController</span>::<span class="text-accent-purple">class</span>),
+])-><span class="text-accent-blue">use</span>(<span class="text-accent-orange">AuthMiddleware</span>::<span class="text-accent-purple">class</span>);
+
+<span class="text-accent-red">$app</span>-><span class="text-accent-blue">run</span>();</code></pre>
+        </div>
+
+        <div class="flex gap-4 justify-center flex-wrap">
+          <a href="/getting-started/" class="inline-flex items-center gap-2 px-7 py-3.5 text-base font-medium no-underline rounded-lg bg-gradient-to-br from-accent-purple to-accent-blue text-white shadow-[0_4px_14px_rgba(168,85,247,0.35)] transition-all cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(168,85,247,0.45)]">
+            Get Started
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+          <a href="https://github.com/chrisarter/verge-framework" class="inline-flex items-center gap-2 px-7 py-3.5 text-base font-medium no-underline rounded-lg bg-dark-50 text-gray-200 border border-hairline-light transition-all cursor-pointer hover:bg-dark-100 hover:text-white" target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            View on GitHub
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-28 bg-gradient-to-b from-transparent to-accent-purple-low">
+      <div class="max-w-[1200px] mx-auto px-6">
+        <h2 class="text-[clamp(1.875rem,5vw,3rem)] font-bold text-center text-white mb-2 leading-tight">Built Different</h2>
+        <p class="text-lg text-gray-300 text-center mb-16">Four principles that guide every design decision</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <a href="/modules/understanding-modules/" class="block bg-[hsla(224,10%,10%,0.5)] border border-hairline rounded-2xl p-8 transition-all cursor-pointer no-underline hover:border-accent-purple-low hover:bg-[rgba(168,85,247,0.08)] hover:-translate-y-1">
+            <div class="w-[52px] h-[52px] flex items-center justify-center bg-gradient-to-br from-accent-purple-low to-accent-blue-low rounded-xl mb-5 text-accent-purple-high">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-3">Modular Design</h3>
+            <p class="text-sm text-gray-300 leading-relaxed mb-5">Build features by composing small, focused modules. Each module registers its own bindings, routes, and event listeners.</p>
+            <div class="bg-dark rounded-lg p-4 overflow-x-auto">
+              <pre class="m-0 font-mono text-xs leading-relaxed"><code><span class="text-accent-red">$app</span>-><span class="text-accent-blue">module</span>(<span class="text-accent-purple">fn</span>(<span class="text-accent-orange">App</span> <span class="text-accent-red">$app</span>) => [
+    <span class="text-accent-red">$app</span>-><span class="text-accent-blue">singleton</span>(<span class="text-accent-orange">Cache</span>::<span class="text-accent-purple">class</span>),
+    <span class="text-accent-red">$app</span>-><span class="text-accent-blue">get</span>(<span class="text-accent-green">'/cache'</span>, <span class="text-accent-orange">CacheCtrl</span>::<span class="text-accent-purple">class</span>),
+]);</code></pre>
+            </div>
+          </a>
+
+          <a href="/introduction/" class="block bg-[hsla(224,10%,10%,0.5)] border border-hairline rounded-2xl p-8 transition-all cursor-pointer no-underline hover:border-accent-purple-low hover:bg-[rgba(168,85,247,0.08)] hover:-translate-y-1">
+            <div class="w-[52px] h-[52px] flex items-center justify-center bg-gradient-to-br from-accent-purple-low to-accent-blue-low rounded-xl mb-5 text-accent-purple-high">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-3">No Magic</h3>
+            <p class="text-sm text-gray-300 leading-relaxed mb-5">No auto-discovery, no hidden conventions, no surprise behavior. Every route, binding, and middleware is explicitly registered.</p>
+            <div class="bg-dark rounded-lg p-4 overflow-x-auto">
+              <pre class="m-0 font-mono text-xs leading-relaxed"><code><span class="text-gray-400 italic">// You register it, you see it</span>
+<span class="text-accent-red">$app</span>-><span class="text-accent-blue">bind</span>(<span class="text-accent-orange">Logger</span>::<span class="text-accent-purple">class</span>, <span class="text-accent-orange">FileLogger</span>::<span class="text-accent-purple">class</span>);
+<span class="text-accent-red">$app</span>-><span class="text-accent-blue">use</span>(<span class="text-accent-orange">CorsMiddleware</span>::<span class="text-accent-purple">class</span>);
+<span class="text-accent-red">$app</span>-><span class="text-accent-blue">get</span>(<span class="text-accent-green">'/api'</span>, <span class="text-accent-orange">ApiCtrl</span>::<span class="text-accent-purple">class</span>);</code></pre>
+            </div>
+          </a>
+
+          <a href="/guides/routing-basics/" class="block bg-[hsla(224,10%,10%,0.5)] border border-hairline rounded-2xl p-8 transition-all cursor-pointer no-underline hover:border-accent-purple-low hover:bg-[rgba(168,85,247,0.08)] hover:-translate-y-1">
+            <div class="w-[52px] h-[52px] flex items-center justify-center bg-gradient-to-br from-accent-purple-low to-accent-blue-low rounded-xl mb-5 text-accent-purple-high">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                <polyline points="14,2 14,8 20,8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-3">Explicit Control</h3>
+            <p class="text-sm text-gray-300 leading-relaxed mb-5">Clear, readable APIs that say what they do. Method names match their behavior. No framework-specific DSL to learn.</p>
+            <div class="bg-dark rounded-lg p-4 overflow-x-auto">
+              <pre class="m-0 font-mono text-xs leading-relaxed"><code><span class="text-accent-red">$app</span>-><span class="text-accent-blue">group</span>(<span class="text-accent-green">'/admin'</span>, <span class="text-accent-purple">fn</span>() => [
+    <span class="text-accent-red">$app</span>-><span class="text-accent-blue">get</span>(<span class="text-accent-green">'/users'</span>, <span class="text-accent-orange">ListUsers</span>::<span class="text-accent-purple">class</span>),
+    <span class="text-accent-red">$app</span>-><span class="text-accent-blue">post</span>(<span class="text-accent-green">'/users'</span>, <span class="text-accent-orange">CreateUser</span>::<span class="text-accent-purple">class</span>),
+])-><span class="text-accent-blue">use</span>(<span class="text-accent-orange">AdminOnly</span>::<span class="text-accent-purple">class</span>);</code></pre>
+            </div>
+          </a>
+
+          <a href="/guides/understanding-drivers/" class="block bg-[hsla(224,10%,10%,0.5)] border border-hairline rounded-2xl p-8 transition-all cursor-pointer no-underline hover:border-accent-purple-low hover:bg-[rgba(168,85,247,0.08)] hover:-translate-y-1">
+            <div class="w-[52px] h-[52px] flex items-center justify-center bg-gradient-to-br from-accent-purple-low to-accent-blue-low rounded-xl mb-5 text-accent-purple-high">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v3"/>
+                <path d="M18.5 13h-3"/>
+                <path d="M8.5 13h-3"/>
+                <path d="M12 18v3"/>
+                <circle cx="12" cy="13" r="3"/>
+                <path d="M5.6 5.6l2.1 2.1"/>
+                <path d="M16.3 16.3l2.1 2.1"/>
+                <path d="M16.3 7.7l2.1-2.1"/>
+                <path d="M5.6 18.4l2.1-2.1"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-3">Endlessly Extendable</h3>
+            <p class="text-sm text-gray-300 leading-relaxed mb-5">Four core primitives&mdash;Container, Router, Middleware, Events&mdash;combine to build anything. Create packages, add drivers, hook into lifecycle.</p>
+            <div class="bg-dark rounded-lg p-4 overflow-x-auto">
+              <pre class="m-0 font-mono text-xs leading-relaxed"><code><span class="text-accent-red">$app</span>-><span class="text-accent-blue">on</span>(<span class="text-accent-green">'app.ready'</span>, <span class="text-accent-purple">fn</span>() =>
+    <span class="text-accent-red">$app</span>-><span class="text-accent-blue">get</span>(<span class="text-accent-green">'/swagger'</span>, <span class="text-accent-orange">SwaggerGen</span>::<span class="text-accent-purple">class</span>)
+);
+<span class="text-accent-red">$app</span>-><span class="text-accent-blue">driver</span>(<span class="text-accent-green">'cache'</span>, <span class="text-accent-green">'redis'</span>, <span class="text-accent-orange">RedisDriver</span>::<span class="text-accent-purple">class</span>);</code></pre>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Primitives Section -->
+    <section class="py-28 bg-[hsla(224,10%,6%,0.8)]">
+      <div class="max-w-[1200px] mx-auto px-6">
+        <h2 class="text-[clamp(1.875rem,5vw,3rem)] font-bold text-center text-white mb-2 leading-tight">Four Primitives. Infinite Possibilities.</h2>
+        <p class="text-lg text-gray-300 text-center mb-16">Everything in Verge is built from these composable building blocks</p>
+
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-5">
+          <div class="bg-[hsla(224,10%,10%,0.5)] border border-hairline rounded-xl p-6 text-center">
+            <span class="inline-block px-4 py-1.5 bg-gradient-to-br from-accent-purple-low to-accent-blue-low rounded-full text-sm font-semibold text-accent-purple-high mb-4">Container</span>
+            <p class="text-sm text-gray-300 leading-relaxed mb-4">PSR-11 dependency injection with singleton, scoped, and transient bindings</p>
+            <code class="block font-mono text-xs text-gray-400 bg-dark px-3 py-2 rounded-md overflow-x-auto whitespace-nowrap">$app-&gt;singleton(Cache::class)</code>
+          </div>
+
+          <div class="bg-[hsla(224,10%,10%,0.5)] border border-hairline rounded-xl p-6 text-center">
+            <span class="inline-block px-4 py-1.5 bg-gradient-to-br from-accent-purple-low to-accent-blue-low rounded-full text-sm font-semibold text-accent-purple-high mb-4">Router</span>
+            <p class="text-sm text-gray-300 leading-relaxed mb-4">Fast route matching with parameters, groups, and named routes</p>
+            <code class="block font-mono text-xs text-gray-400 bg-dark px-3 py-2 rounded-md overflow-x-auto whitespace-nowrap">$app-&gt;get('/users/&#123;id&#125;', ...)</code>
+          </div>
+
+          <div class="bg-[hsla(224,10%,10%,0.5)] border border-hairline rounded-xl p-6 text-center">
+            <span class="inline-block px-4 py-1.5 bg-gradient-to-br from-accent-purple-low to-accent-blue-low rounded-full text-sm font-semibold text-accent-purple-high mb-4">Middleware</span>
+            <p class="text-sm text-gray-300 leading-relaxed mb-4">PSR-15 pipeline for auth, CORS, logging, and request transformation</p>
+            <code class="block font-mono text-xs text-gray-400 bg-dark px-3 py-2 rounded-md overflow-x-auto whitespace-nowrap">$app-&gt;use(AuthMiddleware::class)</code>
+          </div>
+
+          <div class="bg-[hsla(224,10%,10%,0.5)] border border-hairline rounded-xl p-6 text-center">
+            <span class="inline-block px-4 py-1.5 bg-gradient-to-br from-accent-purple-low to-accent-blue-low rounded-full text-sm font-semibold text-accent-purple-high mb-4">Events</span>
+            <p class="text-sm text-gray-300 leading-relaxed mb-4">PSR-14 dispatcher with wildcard listeners for decoupled hooks</p>
+            <code class="block font-mono text-xs text-gray-400 bg-dark px-3 py-2 rounded-md overflow-x-auto whitespace-nowrap">$app-&gt;on('user.created', ...)</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-28 text-center">
+      <div class="max-w-[1200px] mx-auto px-6">
+        <h2 class="text-[clamp(1.5rem,4vw,2.25rem)] font-bold text-white mb-2">Ready to build something great?</h2>
+        <p class="text-lg text-gray-300 mb-8">Get started with Verge in under a minute</p>
+        <div class="inline-flex items-center gap-3 bg-dark border border-hairline-light rounded-lg px-5 py-4 mb-8">
+          <code class="font-mono text-base text-accent-green">composer require verge/verge</code>
+          <button class="bg-transparent border-none text-gray-400 cursor-pointer p-1 flex items-center justify-center transition-colors hover:text-white" onclick="navigator.clipboard.writeText('composer require verge/verge')" aria-label="Copy to clipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <br/>
+        <a href="/getting-started/" class="inline-flex items-center gap-2 px-7 py-3.5 text-base font-medium no-underline rounded-lg bg-gradient-to-br from-accent-purple to-accent-blue text-white shadow-[0_4px_14px_rgba(168,85,247,0.35)] transition-all cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(168,85,247,0.45)]">Read the Documentation</a>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-hairline text-center">
+      <div class="max-w-[1200px] mx-auto px-6">
+        <p class="text-sm text-gray-400">Built with care. MIT License.</p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -269,12 +269,12 @@ describe('App', function () {
             });
         });
 
-        describe('configure()', function () {
-            it('calls callback with app', function () {
+        describe('module()', function () {
+            it('calls callback with app (closure module)', function () {
                 $app = new App();
                 $called = false;
 
-                $app->configure(function ($a) use (&$called, $app) {
+                $app->module(function ($a) use (&$called, $app) {
                     $called = true;
                     expect($a)->toBe($app);
                 });
@@ -285,7 +285,7 @@ describe('App', function () {
             it('is chainable', function () {
                 $app = new App();
 
-                $result = $app->configure(fn ($app) => null);
+                $result = $app->module(fn ($app) => null);
 
                 expect($result)->toBe($app);
             });
@@ -293,7 +293,7 @@ describe('App', function () {
             it('accepts module class string', function () {
                 $app = new App();
 
-                $app->configure(TestModule::class);
+                $app->module(TestModule::class);
 
                 expect($app->make('provided-value'))->toBe('from-module');
             });
@@ -302,7 +302,7 @@ describe('App', function () {
                 $_ENV['TEST_MODULE_VAR'] = 'injected-value';
                 $app = new App();
 
-                $app->configure(ModuleWithDependency::class);
+                $app->module(ModuleWithDependency::class);
 
                 expect($app->make('env-value'))->toBe('injected-value');
 
@@ -312,8 +312,8 @@ describe('App', function () {
             it('chains multiple modules', function () {
                 $app = new App();
 
-                $app->configure(TestModule::class)
-                    ->configure(fn ($app) => $app->bind('another', fn () => 'value'));
+                $app->module(TestModule::class)
+                    ->module(fn ($app) => $app->bind('another', fn () => 'value'));
 
                 expect($app->make('provided-value'))->toBe('from-module');
                 expect($app->make('another'))->toBe('value');
@@ -322,7 +322,7 @@ describe('App', function () {
             it('accepts array of modules', function () {
                 $app = new App();
 
-                $app->configure([
+                $app->module([
                     TestModule::class,
                     fn ($app) => $app->bind('second', fn () => 'second-value'),
                     fn ($app) => $app->bind('third', fn () => 'third-value'),
@@ -331,24 +331,6 @@ describe('App', function () {
                 expect($app->make('provided-value'))->toBe('from-module');
                 expect($app->make('second'))->toBe('second-value');
                 expect($app->make('third'))->toBe('third-value');
-            });
-        });
-
-        describe('module()', function () {
-            it('registers a module class', function () {
-                $app = new App();
-
-                $app->module(UsersModule::class);
-
-                expect($app->make('users.repository'))->toBe('user-repository');
-            });
-
-            it('is chainable', function () {
-                $app = new App();
-
-                $result = $app->module(UsersModule::class);
-
-                expect($result)->toBe($app);
             });
 
             it('registers routes from module', function () {
@@ -389,7 +371,7 @@ describe('App', function () {
                 $app = new App();
                 $order = [];
 
-                $app->configure(function ($app) use (&$order) {
+                $app->module(function ($app) use (&$order) {
                     $order[] = 'configure';
                 });
 
@@ -397,7 +379,7 @@ describe('App', function () {
                     $order[] = 'ready';
                 });
 
-                $app->configure(function ($app) use (&$order) {
+                $app->module(function ($app) use (&$order) {
                     $order[] = 'configure2';
                 });
 
@@ -836,6 +818,78 @@ describe('App', function () {
 
             expect($app->test()->get('/health')->body())->toBe('ok');
             expect($app->test()->get('/api/users')->body())->toBe('users');
+        });
+    });
+
+    describe('commands', function () {
+        describe('command()', function () {
+            it('registers a command handler', function () {
+                $app = new App();
+
+                $app->command('test:run', fn () => 0);
+
+                expect($app->getCommands())->toHaveKey('test:run');
+            });
+
+            it('is chainable', function () {
+                $app = new App();
+
+                $result = $app->command('test:run', fn () => 0);
+
+                expect($result)->toBe($app);
+            });
+
+            it('accepts class string handler', function () {
+                $app = new App();
+
+                $app->command('test:run', TestController::class);
+
+                expect($app->getCommands()['test:run'])->toBe(TestController::class);
+            });
+
+            it('accepts closure handler', function () {
+                $app = new App();
+                $handler = fn () => 0;
+
+                $app->command('test:run', $handler);
+
+                expect($app->getCommands()['test:run'])->toBe($handler);
+            });
+
+            it('registers multiple commands', function () {
+                $app = new App();
+                $initialCount = count($app->getCommands());
+
+                $app->command('custom:one', fn () => 0)
+                    ->command('custom:two', fn () => 0);
+
+                expect(count($app->getCommands()))->toBe($initialCount + 2);
+                expect($app->getCommands())->toHaveKey('custom:one');
+                expect($app->getCommands())->toHaveKey('custom:two');
+            });
+        });
+
+        describe('getCommands()', function () {
+            it('includes built-in commands from ConsoleModule', function () {
+                $app = new App();
+
+                $commands = $app->getCommands();
+
+                expect($commands)->toHaveKey('routes:list');
+                expect($commands)->toHaveKey('cache:warm');
+                expect($commands)->toHaveKey('cache:clear');
+            });
+
+            it('includes custom commands alongside built-in', function () {
+                $app = new App();
+
+                $app->command('custom:cmd', fn () => 0);
+
+                $commands = $app->getCommands();
+
+                expect($commands)->toHaveKey('routes:list');
+                expect($commands)->toHaveKey('custom:cmd');
+            });
         });
     });
 

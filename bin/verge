@@ -1,0 +1,76 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Verge\App;
+use Verge\Console\Application;
+
+// Ensure CLI mode
+if (php_sapi_name() !== 'cli') {
+    exit(1);
+}
+
+// Find autoloader
+$autoloadPaths = [
+    __DIR__ . '/../vendor/autoload.php',      // When in project root
+    __DIR__ . '/../../../autoload.php',        // When in vendor/bin/
+];
+
+$autoloaderFound = false;
+foreach ($autoloadPaths as $path) {
+    if (file_exists($path)) {
+        require $path;
+        $autoloaderFound = true;
+        break;
+    }
+}
+
+if (!$autoloaderFound) {
+    fwrite(STDERR, "Could not find autoloader. Run 'composer install'.\n");
+    exit(1);
+}
+
+// Find app bootstrap file
+$appPath = null;
+
+// Check for --app option
+foreach ($argv as $i => $arg) {
+    if (str_starts_with($arg, '--app=')) {
+        $appPath = substr($arg, 6);
+        unset($argv[$i]);
+        $argv = array_values($argv);
+        break;
+    }
+}
+
+// Default locations
+if ($appPath === null) {
+    $defaultPaths = [
+        getcwd() . '/bootstrap/app.php',
+        getcwd() . '/app.php',
+    ];
+
+    foreach ($defaultPaths as $path) {
+        if (file_exists($path)) {
+            $appPath = $path;
+            break;
+        }
+    }
+}
+
+// Load app or create minimal one
+if ($appPath !== null && file_exists($appPath)) {
+    $app = require $appPath;
+    if (!$app instanceof App) {
+        fwrite(STDERR, "Bootstrap file must return a Verge\\App instance.\n");
+        exit(1);
+    }
+} else {
+    // Create minimal app for commands that don't need user's app
+    $app = new App();
+}
+
+// Run console
+$console = new Application($app);
+exit($console->run($argv));

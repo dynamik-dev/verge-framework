@@ -23,6 +23,9 @@
             "Verge\\Tests\\": "tests/"
         }
     },
+    "bin": [
+        "bin/verge"
+    ],
     "require": {
         "php": "^8.2",
         "psr/http-message": "^2.0",
@@ -31,13 +34,15 @@
         "psr/http-server-middleware": "^1.0",
         "psr/http-factory": "^1.1",
         "psr/event-dispatcher": "^1.0",
-        "psr/clock": "^1.0"
+        "psr/clock": "^1.0",
+        "minicli/minicli": "^4.2"
     },
     "require-dev": {
         "pestphp/pest": "^2.0",
         "phpstan/phpstan": "^2.1",
         "friendsofphp/php-cs-fixer": "^3.92",
-        "phpbench/phpbench": "^1.4"
+        "phpbench/phpbench": "^1.4",
+        "pestphp/pest-plugin-mock": "^2.0"
     },
     "scripts": {
         "test": "pest --parallel",

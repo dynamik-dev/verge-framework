@@ -6,7 +6,7 @@ namespace Verge\Routing;
 
 use Verge\App;
 
-class RoutingServiceProvider
+class RoutingModule
 {
     public function __invoke(App $app): void
     {

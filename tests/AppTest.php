@@ -72,16 +72,25 @@ class TestMiddleware
     }
 }
 
-class TestProvider
+class TestModule
 {
     public function __invoke(App $app): void
     {
-        $app->bind('provided-value', fn () => 'from-provider');
+        $app->bind('provided-value', fn () => 'from-module');
         $app->singleton(TestService::class, fn () => new TestService());
     }
 }
 
-class ProviderWithDependency
+class UsersModule
+{
+    public function __invoke(App $app): void
+    {
+        $app->bind('users.repository', fn () => 'user-repository');
+        $app->get('/users', fn () => ['users' => []]);
+    }
+}
+
+class ModuleWithDependency
 {
     public function __construct(public Env $env)
     {
@@ -89,7 +98,7 @@ class ProviderWithDependency
 
     public function __invoke(App $app): void
     {
-        $app->instance('env-value', $this->env->get('TEST_PROVIDER_VAR', 'default'));
+        $app->instance('env-value', $this->env->get('TEST_MODULE_VAR', 'default'));
     }
 }
 
@@ -190,6 +199,26 @@ describe('App', function () {
             });
         });
 
+        describe('for()', function () {
+            it('creates contextual binding', function () {
+                $app = new App();
+
+                $app->bind(TestService::class, fn () => new class extends TestService {
+                    public function greet(): string
+                    {
+                        return 'Hello from contextual';
+                    }
+                })->for(TestController::class);
+
+                // Default binding
+                $app->bind(TestService::class, fn () => new TestService());
+
+                $controller = $app->make(TestController::class);
+
+                expect($controller->service->greet())->toBe('Hello from contextual');
+            });
+        });
+
         describe('has()', function () {
             it('checks container for binding', function () {
                 $app = new App();
@@ -261,47 +290,121 @@ describe('App', function () {
                 expect($result)->toBe($app);
             });
 
-            it('accepts provider class string', function () {
+            it('accepts module class string', function () {
                 $app = new App();
 
-                $app->configure(TestProvider::class);
+                $app->configure(TestModule::class);
 
-                expect($app->make('provided-value'))->toBe('from-provider');
+                expect($app->make('provided-value'))->toBe('from-module');
             });
 
-            it('resolves provider with dependencies', function () {
-                $_ENV['TEST_PROVIDER_VAR'] = 'injected-value';
+            it('resolves module with dependencies', function () {
+                $_ENV['TEST_MODULE_VAR'] = 'injected-value';
                 $app = new App();
 
-                $app->configure(ProviderWithDependency::class);
+                $app->configure(ModuleWithDependency::class);
 
                 expect($app->make('env-value'))->toBe('injected-value');
 
-                unset($_ENV['TEST_PROVIDER_VAR']);
+                unset($_ENV['TEST_MODULE_VAR']);
             });
 
-            it('chains multiple providers', function () {
+            it('chains multiple modules', function () {
                 $app = new App();
 
-                $app->configure(TestProvider::class)
+                $app->configure(TestModule::class)
                     ->configure(fn ($app) => $app->bind('another', fn () => 'value'));
 
-                expect($app->make('provided-value'))->toBe('from-provider');
+                expect($app->make('provided-value'))->toBe('from-module');
                 expect($app->make('another'))->toBe('value');
             });
 
-            it('accepts array of providers', function () {
+            it('accepts array of modules', function () {
                 $app = new App();
 
                 $app->configure([
-                    TestProvider::class,
+                    TestModule::class,
                     fn ($app) => $app->bind('second', fn () => 'second-value'),
                     fn ($app) => $app->bind('third', fn () => 'third-value'),
                 ]);
 
-                expect($app->make('provided-value'))->toBe('from-provider');
+                expect($app->make('provided-value'))->toBe('from-module');
                 expect($app->make('second'))->toBe('second-value');
                 expect($app->make('third'))->toBe('third-value');
+            });
+        });
+
+        describe('module()', function () {
+            it('registers a module class', function () {
+                $app = new App();
+
+                $app->module(UsersModule::class);
+
+                expect($app->make('users.repository'))->toBe('user-repository');
+            });
+
+            it('is chainable', function () {
+                $app = new App();
+
+                $result = $app->module(UsersModule::class);
+
+                expect($result)->toBe($app);
+            });
+
+            it('registers routes from module', function () {
+                $app = new App();
+
+                $app->module(UsersModule::class);
+
+                $response = $app->test()->get('/users');
+                expect($response->status())->toBe(200);
+                expect($response->json())->toBe(['users' => []]);
+            });
+        });
+
+        describe('ready()', function () {
+            it('registers callback for app.ready event', function () {
+                $app = new App();
+                $called = false;
+
+                $app->ready(function () use (&$called) {
+                    $called = true;
+                });
+
+                // Trigger boot
+                $app->test()->get('/');
+
+                expect($called)->toBeTrue();
+            });
+
+            it('is chainable', function () {
+                $app = new App();
+
+                $result = $app->ready(fn () => null);
+
+                expect($result)->toBe($app);
+            });
+
+            it('runs after all modules are loaded', function () {
+                $app = new App();
+                $order = [];
+
+                $app->configure(function ($app) use (&$order) {
+                    $order[] = 'configure';
+                });
+
+                $app->ready(function () use (&$order) {
+                    $order[] = 'ready';
+                });
+
+                $app->configure(function ($app) use (&$order) {
+                    $order[] = 'configure2';
+                });
+
+                // Trigger boot
+                $app->test()->get('/');
+
+                expect($order)->toBe(['configure', 'configure2', 'ready']);
             });
         });
 

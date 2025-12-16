@@ -146,6 +146,16 @@ class App
         return $this->events()->hasListeners($event);
     }
 
+    /**
+     * Register a callback to run after all modules are loaded.
+     *
+     * @param callable(): void $callback
+     */
+    public function ready(callable $callback): static
+    {
+        return $this->on('app.ready', $callback);
+    }
+
     // Routing methods (forwarded to router)
 
     /**
@@ -257,6 +267,17 @@ class App
     public function scoped(string $abstract, Closure|string $concrete): static
     {
         $this->container->scoped($abstract, $concrete);
+        return $this;
+    }
+
+    /**
+     * Make the preceding binding contextual for specific classes.
+     *
+     * @param string|string[] $contexts
+     */
+    public function for(string|array $contexts): static
+    {
+        $this->container->for($contexts);
         return $this;
     }
 
@@ -379,10 +400,20 @@ class App
         }
 
         if (!is_callable($provider)) {
-            throw new \RuntimeException('Provider must be callable');
+            throw new \RuntimeException('Module must be callable');
         }
         $provider($this);
         return $this;
+    }
+
+    /**
+     * Register a module.
+     *
+     * @param class-string $module
+     */
+    public function module(string $module): static
+    {
+        return $this->configure($module);
     }
 
     /**

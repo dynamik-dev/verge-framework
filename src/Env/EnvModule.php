@@ -6,7 +6,7 @@ namespace Verge\Env;
 
 use Verge\App;
 
-class EnvServiceProvider
+class EnvModule
 {
     public function __invoke(App $app): void
     {

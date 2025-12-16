@@ -6,7 +6,7 @@ namespace Verge\Log;
 
 use Verge\App;
 
-class LoggerServiceProvider
+class LogModule
 {
     public function __invoke(App $app): void
     {

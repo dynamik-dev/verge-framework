@@ -6,7 +6,7 @@ namespace Verge\Events;
 
 use Verge\App;
 
-class EventsServiceProvider
+class EventsModule
 {
     public function __invoke(App $app): void
     {

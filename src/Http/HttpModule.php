@@ -8,7 +8,7 @@ use Psr\Http\Client\ClientInterface;
 use Verge\App;
 use Verge\Http\Client\Client;
 
-class HttpServiceProvider
+class HttpModule
 {
     public function __invoke(App $app): void
     {

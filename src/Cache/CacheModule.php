@@ -6,7 +6,7 @@ namespace Verge\Cache;
 
 use Verge\App;
 
-class CacheServiceProvider
+class CacheModule
 {
     public function __invoke(App $app): void
     {

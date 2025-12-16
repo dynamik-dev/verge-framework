@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace Verge;
 
-use Verge\Cache\CacheServiceProvider;
-use Verge\Env\EnvServiceProvider;
-use Verge\Events\EventsServiceProvider;
-use Verge\Http\HttpServiceProvider;
-use Verge\Log\LoggerServiceProvider;
-use Verge\Routing\RoutingServiceProvider;
+use Verge\Cache\CacheModule;
+use Verge\Env\EnvModule;
+use Verge\Events\EventsModule;
+use Verge\Http\HttpModule;
+use Verge\Log\LogModule;
+use Verge\Routing\RoutingModule;
 
 class AppBuilder
 {
     public function __invoke(App $app): void
     {
         $app->configure([
-            EnvServiceProvider::class,
-            RoutingServiceProvider::class,
-            HttpServiceProvider::class,
-            EventsServiceProvider::class,
-            CacheServiceProvider::class,
-            LoggerServiceProvider::class,
+            EnvModule::class,
+            RoutingModule::class,
+            HttpModule::class,
+            EventsModule::class,
+            CacheModule::class,
+            LogModule::class,
         ]);
     }
 }
